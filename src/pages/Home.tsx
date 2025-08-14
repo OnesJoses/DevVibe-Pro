@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ChevronDown, Github, Linkedin, Mail, ExternalLink, Code, Palette, Smartphone, Globe, ArrowRight, Star } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 /**
  * Home page component for the portfolio website
@@ -143,7 +144,9 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex-shrink-0">
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">OM</span>
+              <a href="#home" aria-label="Home">
+                <Logo size={36} />
+              </a>
             </div>
             
             {/* Desktop Navigation */}
@@ -166,6 +169,9 @@ export default function Home() {
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="text-muted-foreground hover:text-foreground"
+                aria-label="Toggle menu"
+                title="Toggle menu"
+                aria-controls="mobile-nav"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   {isMenuOpen ? (
@@ -181,7 +187,7 @@ export default function Home() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden">
+          <div className="md:hidden" id="mobile-nav">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-background/95 backdrop-blur-md">
               {navItems.map((item) => (
                 <a
@@ -215,30 +221,21 @@ export default function Home() {
           <div className="h-full w-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')"></div>
         </div>
 
-        {/* Floating Particles */}
+        {/* Floating Particles (CSS-driven to avoid inline styles) */}
         <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white/30 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${5 + Math.random() * 10}s`
-              }}
-            ></div>
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div key={i} className="particle absolute w-1 h-1 bg-white/30 rounded-full animate-float" />
           ))}
         </div>
 
         {/* Hero Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <div className="space-y-8">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
+            {/* Badge (links to contact) */}
+            <a href="#contact" className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
               <div className="h-4 w-4 bg-green-400 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-white/90">Available for new projects</span>
-            </div>
+            </a>
 
             {/* Main Heading */}
             <div className="space-y-4">
@@ -260,12 +257,14 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 group">
-                View My Work
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 group">
+                <a href="#portfolio">
+                  View My Work
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </a>
               </Button>
-              <Button variant="outline" size="lg" className="bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white">
-                Let's Connect
+              <Button asChild variant="outline" size="lg" className="bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white">
+                <a href="#contact">Let's Connect</a>
               </Button>
             </div>
 
@@ -289,7 +288,9 @@ export default function Home() {
 
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <ChevronDown className="h-6 w-6 text-white/50" />
+          <a href="#about" aria-label="Scroll to About">
+            <ChevronDown className="h-6 w-6 text-white/50" />
+          </a>
         </div>
       </section>
 
@@ -320,13 +321,17 @@ export default function Home() {
               </div>
               
               <div className="flex gap-4 pt-4">
-                <Button variant="outline" size="sm" className="bg-transparent">
-                  <Github className="mr-2 h-4 w-4" />
-                  GitHub
+                <Button asChild variant="outline" size="sm" className="bg-transparent">
+                  <a href="https://github.com/your-username" target="_blank" rel="noreferrer noopener">
+                    <Github className="mr-2 h-4 w-4" />
+                    GitHub
+                  </a>
                 </Button>
-                <Button variant="outline" size="sm" className="bg-transparent">
-                  <Linkedin className="mr-2 h-4 w-4" />
-                  LinkedIn
+                <Button asChild variant="outline" size="sm" className="bg-transparent">
+                  <a href="https://www.linkedin.com/in/your-username" target="_blank" rel="noreferrer noopener">
+                    <Linkedin className="mr-2 h-4 w-4" />
+                    LinkedIn
+                  </a>
                 </Button>
               </div>
             </div>
@@ -406,7 +411,7 @@ export default function Home() {
           {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project, index) => (
-              <Card key={index} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-card/50 backdrop-blur-sm">
+              <Card key={index} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-card/50 backdrop-blur-sm relative">
                 <div className="aspect-video overflow-hidden relative">
                   <img 
                     src={project.image} 
@@ -421,6 +426,8 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+                {/* Full-card anchor (placeholder: links to image). Replace with real project URLs */}
+                <a href={project.image} target="_blank" rel="noreferrer noopener" className="absolute inset-0" aria-label={`Open ${project.title}`}></a>
                 <CardHeader>
                   <CardTitle className="text-lg">{project.title}</CardTitle>
                   <CardDescription>{project.description}</CardDescription>
@@ -549,26 +556,35 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">OM</span>
-              <p className="text-muted-foreground mt-2">© 2024 Onesmus M. All rights reserved.</p>
+              <div className="flex items-center gap-3">
+                <Logo size={28} />
+                <span className="sr-only">Onesmus M.</span>
+              </div>
+              <p className="text-muted-foreground mt-2">© 2025 Onesmus M. All rights reserved.</p>
             </div>
             <div className="flex space-x-4">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                <Github className="h-5 w-5" />
+              <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <a href="https://github.com/your-username" target="_blank" rel="noreferrer noopener" aria-label="GitHub">
+                  <Github className="h-5 w-5" />
+                </a>
               </Button>
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                <Linkedin className="h-5 w-5" />
+              <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <a href="https://www.linkedin.com/in/your-username" target="_blank" rel="noreferrer noopener" aria-label="LinkedIn">
+                  <Linkedin className="h-5 w-5" />
+                </a>
               </Button>
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                <Mail className="h-5 w-5" />
+              <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <a href="mailto:hello@example.com" aria-label="Email">
+                  <Mail className="h-5 w-5" />
+                </a>
               </Button>
             </div>
           </div>
         </div>
       </footer>
 
-      {/* Custom Animation Styles */}
-      <style jsx>{`
+  {/* Custom Animation Styles */}
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-20px) rotate(180deg); }
@@ -582,7 +598,28 @@ export default function Home() {
         .animation-delay-4000 {
           animation-delay: 4s;
         }
-      `}</style>
+        /* Particle positions and timings */
+        .particle:nth-child(1) { left: 5%; top: 12%; animation-delay: 0.2s; animation-duration: 7s; }
+        .particle:nth-child(2) { left: 18%; top: 34%; animation-delay: 1.1s; animation-duration: 10s; }
+        .particle:nth-child(3) { left: 28%; top: 22%; animation-delay: 0.6s; animation-duration: 8s; }
+        .particle:nth-child(4) { left: 42%; top: 16%; animation-delay: 1.8s; animation-duration: 11s; }
+        .particle:nth-child(5) { left: 60%; top: 10%; animation-delay: 0.9s; animation-duration: 9s; }
+        .particle:nth-child(6) { left: 72%; top: 24%; animation-delay: 1.4s; animation-duration: 12s; }
+        .particle:nth-child(7) { left: 85%; top: 20%; animation-delay: 0.3s; animation-duration: 7.5s; }
+        .particle:nth-child(8) { left: 12%; top: 58%; animation-delay: 1.0s; animation-duration: 9.5s; }
+        .particle:nth-child(9) { left: 30%; top: 62%; animation-delay: 0.5s; animation-duration: 8.5s; }
+        .particle:nth-child(10){ left: 48%; top: 55%; animation-delay: 1.6s; animation-duration: 12.5s; }
+        .particle:nth-child(11){ left: 66%; top: 68%; animation-delay: 0.7s; animation-duration: 10.5s; }
+        .particle:nth-child(12){ left: 78%; top: 52%; animation-delay: 1.2s; animation-duration: 11.5s; }
+        .particle:nth-child(13){ left: 90%; top: 60%; animation-delay: 0.4s; animation-duration: 9s; }
+        .particle:nth-child(14){ left: 8%;  top: 80%; animation-delay: 1.9s; animation-duration: 13s; }
+        .particle:nth-child(15){ left: 22%; top: 78%; animation-delay: 0.8s; animation-duration: 8.8s; }
+        .particle:nth-child(16){ left: 38%; top: 84%; animation-delay: 1.3s; animation-duration: 10.8s; }
+        .particle:nth-child(17){ left: 54%; top: 78%; animation-delay: 0.1s; animation-duration: 7.2s; }
+        .particle:nth-child(18){ left: 70%; top: 86%; animation-delay: 1.5s; animation-duration: 12.2s; }
+        .particle:nth-child(19){ left: 82%; top: 74%; animation-delay: 0.6s; animation-duration: 9.2s; }
+        .particle:nth-child(20){ left: 94%; top: 88%; animation-delay: 1.7s; animation-duration: 11.2s; }
+  `}</style>
     </div>
   )
 }
