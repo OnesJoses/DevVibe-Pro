@@ -8,6 +8,9 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ChevronDown, Github, Linkedin, Mail, ExternalLink, Code, Palette, Smartphone, Globe, ArrowRight, Star } from 'lucide-react'
 import Logo from '@/components/Logo'
+import { useAuthStore } from '@/hooks/useAuthStore'
+import { Link, useNavigate, useLocation } from 'react-router'
+import { projects as allProjects } from '@/lib/projects'
 
 /**
  * Home page component for the portfolio website
@@ -17,6 +20,11 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [currentRoleIndex, setCurrentRoleIndex] = useState(0)
+  const navigate = useNavigate()
+  const { user, isAuthenticated, hydrate, logout } = useAuthStore()
+  const location = useLocation()
+
+  useEffect(() => { hydrate() }, [hydrate])
 
   const roles = [
     "Full Stack Developer",
@@ -41,13 +49,27 @@ export default function Home() {
     return () => clearInterval(roleInterval)
   }, [])
 
+  // Smooth-scroll to section based on pathname (/about -> #about)
+  useEffect(() => {
+    const path = location.pathname.replace(/^\/+/, '') // remove leading slashes
+    const section = path === '' ? 'home' : path
+    const selector = `#${section}`
+    const el = document.querySelector(selector)
+    if (el) {
+      // small timeout to ensure layout is ready
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 0)
+    }
+  }, [location.pathname])
+
   const navItems = [
-    { name: 'Home', href: '#home' },
-    { name: 'About', href: '#about' },
-    { name: 'Services', href: '#services' },
-    { name: 'Portfolio', href: '#portfolio' },
-    { name: 'Testimonials', href: '#testimonials' },
-    { name: 'Contact', href: '#contact' }
+    { name: 'Home', path: '/' },
+    { name: 'About', path: '/about' },
+    { name: 'Services', path: '/services' },
+    { name: 'Portfolio', path: '/portfolio' },
+    { name: 'Testimonials', path: '/testimonials' },
+    { name: 'Contact', path: '/contact' }
   ]
 
   const services = [
@@ -73,63 +95,26 @@ export default function Home() {
     }
   ]
 
-  const projects = [
-    {
-      title: "E-Commerce Revolution",
-      category: "web",
-      description: "Next-gen shopping platform with AI-powered recommendations and seamless checkout.",
-      image: "https://pub-cdn.sider.ai/u/U0GVH7EAJYR/web-coder/689e2ba57b28bae498f5565d/resource/88fbbb07-479b-412a-b967-0e2e2ee229a4.jpg"
-    },
-    {
-      title: "Analytics Dashboard Pro",
-      category: "design",
-      description: "Real-time data visualization platform for business intelligence and insights.",
-      image: "https://pub-cdn.sider.ai/u/U0GVH7EAJYR/web-coder/689e2ba57b28bae498f5565d/resource/021e6830-35c6-4698-a4a1-d6237e730b42.jpg"
-    },
-    {
-      title: "FinTech Mobile App",
-      category: "mobile",
-      description: "Secure, intuitive banking application with biometric authentication.",
-      image: "https://pub-cdn.sider.ai/u/U0GVH7EAJYR/web-coder/689e2ba57b28bae498f5565d/resource/38b379d6-a365-401b-814d-71fae9781c64.jpg"
-    },
-    {
-      title: "Creative Portfolio",
-      category: "web",
-      description: "Immersive portfolio showcase for digital artists and designers.",
-      image: "https://pub-cdn.sider.ai/u/U0GVH7EAJYR/web-coder/689e2ba57b28bae498f5565d/resource/a2d04d17-c2a3-4024-a7ea-54a0b5212650.jpg"
-    },
-    {
-      title: "Travel Platform",
-      category: "web",
-      description: "Comprehensive travel booking experience with virtual tours and local guides.",
-      image: "https://pub-cdn.sider.ai/u/U0GVH7EAJYR/web-coder/689e2ba57b28bae498f5565d/resource/229b7a3d-52d5-41c3-8c9b-497c88663847.jpg"
-    },
-    {
-      title: "Health & Fitness",
-      category: "mobile",
-      description: "AI-powered fitness coach with personalized workout and nutrition plans.",
-      image: "https://pub-cdn.sider.ai/u/U0GVH7EAJYR/web-coder/689e2ba57b28bae498f5565d/resource/85fa4d2e-b839-40c0-a4fb-c23059082619.jpg"
-    }
-  ]
+  const projects = allProjects
 
   const testimonials = [
     {
       name: "Sarah Johnson",
       role: "CEO, TechStart Inc.",
       content: "Exceptional work! The platform exceeded our expectations and increased conversions by 40%. Their attention to detail and innovative approach is outstanding.",
-      avatar: "https://pub-cdn.sider.ai/u/U0GVH7EAJYR/web-coder/689e2ba57b28bae498f5565d/resource/41202975-4de2-47c8-8cb9-5a888b5ab7fa.jpg"
+  avatar: "https://i.pravatar.cc/128?img=12"
     },
     {
       name: "Michael Chen",
       role: "Marketing Director, BrandCo",
       content: "A true professional who delivers beyond expectations. Our brand transformation has been incredible, and user engagement has skyrocketed.",
-      avatar: "https://pub-cdn.sider.ai/u/U0GVH7EAJYR/web-coder/689e2ba57b28bae498f5565d/resource/ee0ad916-8721-485f-bef6-20c3cc24dfa9.jpg"
+  avatar: "https://i.pravatar.cc/128?img=32"
     },
     {
       name: "Emily Rodriguez",
       role: "Founder, StartupHub",
       content: "The mobile app they created is intuitive and has significantly improved user retention. Highly recommend for any digital project.",
-      avatar: "https://pub-cdn.sider.ai/u/U0GVH7EAJYR/web-coder/689e2ba57b28bae498f5565d/resource/2d35e3ad-258e-4393-8964-7788ec07ebeb.jpg"
+  avatar: "https://i.pravatar.cc/128?img=48"
     }
   ]
 
@@ -142,26 +127,51 @@ export default function Home() {
       {/* Navigation */}
       <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-background/90 backdrop-blur-md shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-16 gap-4">
             <div className="flex-shrink-0">
-              <a href="#home" aria-label="Home">
+              <Link to="/" aria-label="Home">
                 <Logo size={36} />
-              </a>
+              </Link>
             </div>
             
             {/* Desktop Navigation */}
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
                 {navItems.map((item) => (
-                  <a
+                  <Link
                     key={item.name}
-                    href={item.href}
+                    to={item.path}
                     className="text-muted-foreground hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     {item.name}
-                  </a>
+                  </Link>
                 ))}
               </div>
+            </div>
+
+            {/* Desktop Account actions */}
+            <div className="hidden md:flex items-center gap-2">
+              {!isAuthenticated ? (
+                <>
+                  <Button asChild size="sm" variant="outline"><Link to="/login">Log in</Link></Button>
+                  <Button asChild size="sm"><Link to="/register">Sign up</Link></Button>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button asChild size="sm" variant="outline"><Link to="/profile">Profile</Link></Button>
+                  <Button asChild size="sm" variant="ghost"><Link to="/settings">Settings</Link></Button>
+                  <button
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-input hover:bg-accent"
+                    onClick={() => { logout(); navigate('/'); }}
+                    aria-label="Log out"
+                  >
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback>{user?.name?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm">Log out</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -190,15 +200,29 @@ export default function Home() {
           <div className="md:hidden" id="mobile-nav">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-background/95 backdrop-blur-md">
               {navItems.map((item) => (
-                <a
+                <Link
                   key={item.name}
-                  href={item.href}
+                  to={item.path}
                   className="text-muted-foreground hover:text-foreground block px-3 py-2 rounded-md text-base font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
-                </a>
+                </Link>
               ))}
+              <div className="border-t mt-2 pt-2 space-y-1">
+                {!isAuthenticated ? (
+                  <>
+                    <Link to="/login" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>Log in</Link>
+                    <Link to="/register" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>Sign up</Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/profile" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>Profile</Link>
+                    <Link to="/settings" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>Settings</Link>
+                    <button className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => { logout(); setIsMenuOpen(false); navigate('/'); }}>Log out</button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -232,10 +256,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <div className="space-y-8">
             {/* Badge (links to contact) */}
-            <a href="#contact" className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
+            <Link to="/contact" className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
               <div className="h-4 w-4 bg-green-400 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-white/90">Available for new projects</span>
-            </a>
+            </Link>
 
             {/* Main Heading */}
             <div className="space-y-4">
@@ -258,13 +282,13 @@ export default function Home() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 group">
-                <a href="#portfolio">
+                <Link to="/portfolio">
                   View My Work
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </a>
+                </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white">
-                <a href="#contact">Let's Connect</a>
+                <Link to="/contact">Let's Connect</Link>
               </Button>
             </div>
 
@@ -288,9 +312,9 @@ export default function Home() {
 
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <a href="#about" aria-label="Scroll to About">
+          <Link to="/about" aria-label="Scroll to About">
             <ChevronDown className="h-6 w-6 text-white/50" />
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -322,13 +346,13 @@ export default function Home() {
               
               <div className="flex gap-4 pt-4">
                 <Button asChild variant="outline" size="sm" className="bg-transparent">
-                  <a href="https://github.com/your-username" target="_blank" rel="noreferrer noopener">
+                  <a href="https://github.com/OnesJoses" target="_blank" rel="noreferrer noopener">
                     <Github className="mr-2 h-4 w-4" />
                     GitHub
                   </a>
                 </Button>
                 <Button asChild variant="outline" size="sm" className="bg-transparent">
-                  <a href="https://www.linkedin.com/in/your-username" target="_blank" rel="noreferrer noopener">
+                  <a href="https://www.linkedin.com/in/onesmus-m-1a41a5372/" target="_blank" rel="noreferrer noopener">
                     <Linkedin className="mr-2 h-4 w-4" />
                     LinkedIn
                   </a>
@@ -340,7 +364,7 @@ export default function Home() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur-2xl opacity-30"></div>
                 <Avatar className="h-80 w-80 relative">
-                  <AvatarImage src="https://pub-cdn.sider.ai/u/U0GVH7EAJYR/web-coder/689e2ba57b28bae498f5565d/resource/1cf86e2d-86be-4bef-b349-1410cb2d76eb.png" alt="Profile" className="object-cover" />
+                  <AvatarImage src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800&auto=format&fit=crop" alt="Sunrise" className="object-cover" />
                   <AvatarFallback>OM</AvatarFallback>
                 </Avatar>
               </div>
@@ -426,8 +450,8 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                {/* Full-card anchor (placeholder: links to image). Replace with real project URLs */}
-                <a href={project.image} target="_blank" rel="noreferrer noopener" className="absolute inset-0" aria-label={`Open ${project.title}`}></a>
+                {/* Full-card internal link to project detail */}
+                <Link to={`/project/${project.slug}`} className="absolute inset-0" aria-label={`Open ${project.title}`}></Link>
                 <CardHeader>
                   <CardTitle className="text-lg">{project.title}</CardTitle>
                   <CardDescription>{project.description}</CardDescription>
@@ -519,7 +543,7 @@ export default function Home() {
                         type="email"
                         id="email"
                         className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 bg-background"
-                        placeholder="your.email@example.com"
+                        placeholder="onesjoses5@gmail.com"
                       />
                     </div>
                   </div>
@@ -564,17 +588,17 @@ export default function Home() {
             </div>
             <div className="flex space-x-4">
               <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                <a href="https://github.com/your-username" target="_blank" rel="noreferrer noopener" aria-label="GitHub">
+                <a href="https://github.com/OnesJoses" target="_blank" rel="noreferrer noopener" aria-label="GitHub">
                   <Github className="h-5 w-5" />
                 </a>
               </Button>
               <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                <a href="https://www.linkedin.com/in/your-username" target="_blank" rel="noreferrer noopener" aria-label="LinkedIn">
+                <a href="https://www.linkedin.com/in/onesmus-m-1a41a5372/" target="_blank" rel="noreferrer noopener" aria-label="LinkedIn">
                   <Linkedin className="h-5 w-5" />
                 </a>
               </Button>
               <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                <a href="mailto:hello@example.com" aria-label="Email">
+                <a href="mailto:onesjoses5@gmail.com" aria-label="Email">
                   <Mail className="h-5 w-5" />
                 </a>
               </Button>
