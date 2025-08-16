@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "node scripts/build.mjs",
-    "build": "node scripts/build.mjs --production"
+  "build": "node scripts/build.mjs --production",
+  "deploy:s3": "powershell -ExecutionPolicy Bypass -File scripts/deploy-s3.ps1 -BucketName $env:S3_BUCKET -Region eu-north-1 -MakePublic"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
