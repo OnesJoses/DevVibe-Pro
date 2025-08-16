@@ -25,6 +25,8 @@ export default function ProfilePage() {
   function onSave(e: React.FormEvent) {
     e.preventDefault()
     updateProfile({ name, email })
+    // After saving profile, return to homepage
+    navigate('/')
   }
 
   if (!user) return null

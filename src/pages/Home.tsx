@@ -122,6 +122,26 @@ export default function Home() {
     ? projects 
     : projects.filter(project => project.category === activeFilter)
 
+  // Contact form submit: open default mail client with prefilled subject/body
+  function handleContactSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    const data = new FormData(form)
+    const name = String(data.get('name') || '').trim()
+    const email = String(data.get('email') || '').trim()
+    const subject = String(data.get('subject') || 'Project inquiry').trim()
+    const message = String(data.get('message') || '').trim()
+    const lines = [
+      name ? `Name: ${name}` : '',
+      email ? `Email: ${email}` : '',
+      '',
+      message,
+    ].filter(Boolean)
+    const body = encodeURIComponent(lines.join('\n'))
+    const mailto = `mailto:onesjoses5@gmail.com?subject=${encodeURIComponent(subject)}&body=${body}`
+    window.location.href = mailto
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -346,13 +366,13 @@ export default function Home() {
               
               <div className="flex gap-4 pt-4">
                 <Button asChild variant="outline" size="sm" className="bg-transparent">
-                  <a href="https://github.com/OnesJoses" target="_blank" rel="noreferrer noopener">
+                  <a href="https://github.com/OnesJoses" target="_blank" rel="noreferrer noopener" aria-label="Visit my GitHub profile">
                     <Github className="mr-2 h-4 w-4" />
                     GitHub
                   </a>
                 </Button>
                 <Button asChild variant="outline" size="sm" className="bg-transparent">
-                  <a href="https://www.linkedin.com/in/onesmus-m-1a41a5372/" target="_blank" rel="noreferrer noopener">
+                  <a href="https://www.linkedin.com/in/onesmus-m-1a41a5372/" target="_blank" rel="noreferrer noopener" aria-label="Visit my LinkedIn profile">
                     <Linkedin className="mr-2 h-4 w-4" />
                     LinkedIn
                   </a>
@@ -526,13 +546,14 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form className="space-y-4">
+                <form className="space-y-4" onSubmit={handleContactSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
                       <input
                         type="text"
                         id="name"
+                        name="name"
                         className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 bg-background"
                         placeholder="Your name"
                       />
@@ -542,6 +563,7 @@ export default function Home() {
                       <input
                         type="email"
                         id="email"
+                        name="email"
                         className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 bg-background"
                         placeholder="onesjoses5@gmail.com"
                       />
@@ -552,6 +574,7 @@ export default function Home() {
                     <input
                       type="text"
                       id="subject"
+                      name="subject"
                       className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 bg-background"
                       placeholder="Project inquiry"
                     />
@@ -561,6 +584,7 @@ export default function Home() {
                     <textarea
                       id="message"
                       rows={4}
+                      name="message"
                       className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 bg-background"
                       placeholder="Tell me about your project..."
                     ></textarea>

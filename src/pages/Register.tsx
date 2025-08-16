@@ -20,6 +20,8 @@ export default function RegisterPage() {
     setLoading(true)
     await register(name, email, password)
     setLoading(false)
+    // After successful register, go to profile
+    navigate('/profile')
   }
 
   return (
