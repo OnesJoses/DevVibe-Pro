@@ -25,7 +25,10 @@ export default function ProfilePage() {
   function onSave(e: React.FormEvent) {
     e.preventDefault()
     updateProfile({ name, email })
-    // After saving profile, return to homepage
+    // After saving profile, return to homepage with a one-time notice
+    try {
+      sessionStorage.setItem('notice', 'Profile updated successfully')
+    } catch {}
     navigate('/')
   }
 

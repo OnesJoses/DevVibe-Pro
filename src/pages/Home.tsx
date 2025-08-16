@@ -20,11 +20,23 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [currentRoleIndex, setCurrentRoleIndex] = useState(0)
+  const [notice, setNotice] = useState<string | null>(null)
   const navigate = useNavigate()
   const { user, isAuthenticated, hydrate, logout } = useAuthStore()
   const location = useLocation()
 
   useEffect(() => { hydrate() }, [hydrate])
+
+  // Show one-time notices passed via sessionStorage (e.g., after profile save)
+  useEffect(() => {
+    const n = sessionStorage.getItem('notice')
+    if (n) {
+      sessionStorage.removeItem('notice')
+      setNotice(n)
+      const t = setTimeout(() => setNotice(null), 4000)
+      return () => clearTimeout(t)
+    }
+  }, [])
 
   const roles = [
     "Full Stack Developer",
@@ -144,6 +156,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
+      {notice && (
+        <div role="status" aria-live="polite" className="fixed top-2 left-1/2 -translate-x-1/2 z-50">
+          <div className="rounded-md bg-emerald-600 text-white px-4 py-2 shadow">
+            {notice}
+          </div>
+        </div>
+      )}
       {/* Navigation */}
       <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-background/90 backdrop-blur-md shadow-sm' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -556,6 +575,7 @@ export default function Home() {
                         name="name"
                         className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 bg-background"
                         placeholder="Your name"
+                        required
                       />
                     </div>
                     <div>
@@ -566,6 +586,7 @@ export default function Home() {
                         name="email"
                         className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 bg-background"
                         placeholder="onesjoses5@gmail.com"
+                        required
                       />
                     </div>
                   </div>
@@ -587,6 +608,7 @@ export default function Home() {
                       name="message"
                       className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 bg-background"
                       placeholder="Tell me about your project..."
+                      required
                     ></textarea>
                   </div>
                   <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
