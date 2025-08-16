@@ -29,7 +29,14 @@ export default function ProfilePage() {
     try {
       sessionStorage.setItem('notice', 'Profile updated successfully')
     } catch {}
-    navigate('/')
+    // Prefer router navigation; replace to avoid back stack clutter
+    navigate('/', { replace: true })
+    // HashRouter safety fallback
+    setTimeout(() => {
+      if (location.hash !== '#/' && typeof window !== 'undefined') {
+        window.location.hash = '#/'
+      }
+    }, 0)
   }
 
   if (!user) return null
