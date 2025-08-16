@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ChevronDown, Github, Linkedin, Mail, ExternalLink, Code, Palette, Smartphone, Globe, ArrowRight, Star } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { useAuthStore } from '@/hooks/useAuthStore'
-import { Link, useNavigate, useLocation } from 'react-router'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { projects as allProjects } from '@/lib/projects'
 
 /**

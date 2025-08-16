@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/hooks/useAuthStore'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 
 export default function SettingsPage() {
   const navigate = useNavigate()

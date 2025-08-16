@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router'
+import { useParams, Link } from 'react-router-dom'
 import { projects } from '@/lib/projects'
 import { Button } from '@/components/ui/button'
 
