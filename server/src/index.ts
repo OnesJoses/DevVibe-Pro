@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './auth'; // Import the auth routes
+import { ensureRedis, redis } from './redisClient';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -13,6 +14,45 @@ app.use(express.json()); // for parsing application/json
 
 // API routes
 app.use('/api/auth', authRoutes); // Use the auth routes
+
+// Redis test routes
+app.get('/api/cache/ping', async (_req, res) => {
+  try {
+    await ensureRedis();
+    const pong = await redis.ping();
+    res.json({ ok: true, pong })
+  } catch (e: any) {
+    res.status(500).json({ ok: false, error: e?.message || 'redis error' })
+  }
+})
+
+app.post('/api/cache/set', async (req, res) => {
+  const { key, value, ttl } = req.body || {}
+  if (!key) return res.status(400).json({ message: 'key required' })
+  try {
+    await ensureRedis();
+    if (ttl) {
+      await redis.set(key, JSON.stringify(value), { EX: Number(ttl) })
+    } else {
+      await redis.set(key, JSON.stringify(value))
+    }
+    res.json({ ok: true })
+  } catch (e: any) {
+    res.status(500).json({ ok: false, error: e?.message || 'redis error' })
+  }
+})
+
+app.get('/api/cache/get', async (req, res) => {
+  const key = (req.query.key as string) || ''
+  if (!key) return res.status(400).json({ message: 'key required' })
+  try {
+    await ensureRedis();
+    const raw = await redis.get(key)
+    res.json({ ok: true, value: raw ? JSON.parse(raw) : null })
+  } catch (e: any) {
+    res.status(500).json({ ok: false, error: e?.message || 'redis error' })
+  }
+})
 
 // Root status route
 app.get('/', (_req, res) => {
