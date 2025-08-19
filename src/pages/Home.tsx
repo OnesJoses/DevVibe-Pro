@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react'
@@ -21,11 +20,23 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [currentRoleIndex, setCurrentRoleIndex] = useState(0)
   const [notice, setNotice] = useState<string | null>(null)
+  const [backendMessage, setBackendMessage] = useState<string>('Connecting to server...')
   const navigate = useNavigate()
   const { user, isAuthenticated, hydrate, logout } = useAuthStore()
   const location = useLocation()
 
   useEffect(() => { hydrate() }, [hydrate])
+
+  // Fetch a message from the backend
+  useEffect(() => {
+    fetch('http://localhost:3001/api/hello')
+      .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+      })
+      .then(data => setBackendMessage(data.message || 'Connected!'))
+      .catch(() => setBackendMessage('Server is offline.'));
+  }, []);
 
   // Show one-time notices passed via sessionStorage (e.g., after profile save)
   useEffect(() => {

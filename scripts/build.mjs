@@ -42,7 +42,8 @@ if (isProd) {
 } else {
   const ctx = await esbuild.context(esbuildOpts)
   await ctx.watch()
-  const { hosts, port } = await ctx.serve()
+  // Serve frontend on a fixed port (5173) to avoid conflicts with Django (8000)
+  const { hosts, port } = await ctx.serve({ port: 5173 })
   console.log(`Running on:`)
   hosts.forEach((host) => {
     console.log(`http://${host}:${port}`)

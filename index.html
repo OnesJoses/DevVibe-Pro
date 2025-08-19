@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Onesmus's workspace</title>
     <link href="main.css" rel="stylesheet">
+    <!-- Vercel Web Analytics -->
+    <script defer src="https://va.vercel-scripts.com/v1/script.js" data-token="YOUR_VERCEL_ANALYTICS_TOKEN"></script>
+    <!-- Track SPA hash route changes (for HashRouter) -->
+    <script>
+      window.addEventListener('hashchange', function () {
+        if (window.va) window.va('pageview')
+      })
+    </script>
   </head>
   <script>
     new EventSource('/esbuild').addEventListener('change', () =>

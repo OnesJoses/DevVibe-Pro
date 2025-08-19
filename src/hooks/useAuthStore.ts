@@ -1,8 +1,10 @@
 import { create } from 'zustand'
 
+const API_URL = 'http://localhost:3001/api/auth'
+
 export type User = {
-  id: string
-  name: string
+  id: number // Changed to number to match the database
+  name: string | null
   email: string
   avatarUrl?: string
 }
@@ -14,6 +16,7 @@ export type Settings = {
 
 type AuthState = {
   user: User | null
+  token: string | null
   settings: Settings
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
@@ -24,15 +27,15 @@ type AuthState = {
   hydrate: () => void
 }
 
-const STORAGE_KEY = 'webcreator_auth'
+const STORAGE_KEY = 'devvibe_auth'
 
-function persist(state: Pick<AuthState, 'user' | 'settings'>) {
+function persist(state: Pick<AuthState, 'user' | 'token' | 'settings'>) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {}
 }
 
-function readPersisted(): Partial<Pick<AuthState, 'user' | 'settings'>> {
+function readPersisted(): Partial<Pick<AuthState, 'user' | 'token' | 'settings'>> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return {}
@@ -44,42 +47,61 @@ function readPersisted(): Partial<Pick<AuthState, 'user' | 'settings'>> {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
+  token: null,
   settings: { theme: 'system', language: 'en' },
   isAuthenticated: false,
-  async login(email, _password) {
-    // Mock auth: accepts any password; in real app, call your backend
-    const existing = get().user
-    const user = existing?.email === email ? existing : {
-      id: crypto.randomUUID(),
-      name: email.split('@')[0],
-      email,
+  async login(email, password) {
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Login failed')
     }
-    set({ user, isAuthenticated: true })
-    persist({ user, settings: get().settings })
+
+    const { token, user } = await response.json()
+    set({ user, token, isAuthenticated: true })
+    persist({ user, token, settings: get().settings })
   },
-  async register(name, email, _password) {
-    const user: User = { id: crypto.randomUUID(), name, email }
-    set({ user, isAuthenticated: true })
-    persist({ user, settings: get().settings })
+  async register(name, email, password) {
+    const response = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Registration failed')
+    }
+    
+    const { token, user } = await response.json()
+    set({ user, token, isAuthenticated: true })
+    persist({ user, token, settings: get().settings })
   },
   logout() {
-    set({ user: null, isAuthenticated: false })
-    persist({ user: null, settings: get().settings })
+    set({ user: null, token: null, isAuthenticated: false })
+    persist({ user: null, token: null, settings: get().settings })
   },
   updateProfile(updates) {
+    // This should ideally be an API call to a /profile endpoint
     const user = { ...(get().user as User), ...updates }
     set({ user })
-    persist({ user, settings: get().settings })
+    persist({ user, token: get().token, settings: get().settings })
   },
   updateSettings(updates) {
     const settings = { ...get().settings, ...updates }
     set({ settings })
-    persist({ user: get().user, settings })
+    persist({ user: get().user, token: get().token, settings })
   },
   hydrate() {
     const persisted = readPersisted()
     const user = persisted.user ?? null
+    const token = persisted.token ?? null
     const settings = persisted.settings ?? { theme: 'system', language: 'en' }
-    set({ user, settings, isAuthenticated: !!user })
+    set({ user, token, settings, isAuthenticated: !!token })
   },
 }))
