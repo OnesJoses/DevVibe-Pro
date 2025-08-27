@@ -29,7 +29,7 @@ export default function Home() {
 
   // Fetch a health status from the Django backend
   useEffect(() => {
-    const DJANGO_BASE = (import.meta as any).env?.VITE_DJANGO_API_BASE || 'http://127.0.0.1:8000'
+    const DJANGO_BASE = import.meta.env.VITE_DJANGO_API_BASE || 'http://127.0.0.1:8000'
     fetch(`${DJANGO_BASE}/api/py/health`)
       .then(res => {
         if (!res.ok) throw new Error('Network response was not ok');
