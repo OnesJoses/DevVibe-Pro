@@ -129,6 +129,30 @@ export default function AIPage() {
               <Button type="submit">Ask</Button>
             </form>
 
+            {/* Free web search (no API, opens in a new tab) */}
+            <div className="flex gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const q = input.trim() || 'Onesmus portfolio DevVibe Pro project overview'
+                  window.open(`https://www.perplexity.ai/search?q=${encodeURIComponent(q)}`, '_blank')
+                }}
+              >
+                Search on Perplexity
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const q = input.trim() || 'Onesmus portfolio DevVibe Pro project overview'
+                  window.open(`https://copilot.microsoft.com/?q=${encodeURIComponent(q)}`, '_blank')
+                }}
+              >
+                Search on Copilot
+              </Button>
+            </div>
+
             <div className="flex flex-wrap gap-2 pt-2">
               {suggestions.map((s, i) => (
                 <Badge key={i} variant="outline" className="cursor-pointer" onClick={() => { setInput(s); }}>
