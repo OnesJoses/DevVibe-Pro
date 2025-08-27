@@ -19,7 +19,7 @@ const esbuildOpts = {
   entryNames: '[name]',
   write: true,
   bundle: true,
-  format: 'iife',
+  format: 'esm',
   sourcemap: isProd ? false : 'linked',
   minify: isProd,
   treeShaking: true,
