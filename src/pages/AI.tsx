@@ -55,6 +55,21 @@ Backend (Django) is deployed on Render with WhiteNoise for static files and env�
   }
 ]
 
+async function callBackend(question: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${DJANGO_BASE}/api/py/ai/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question })
+    })
+    if (!res.ok) return null
+    const data = await res.json().catch(() => null) as any
+    return (data && typeof data.answer === 'string' && data.answer.trim()) ? data.answer : null
+  } catch {
+    return null
+  }
+}
+
 function searchKB(question: string): string {
   const q = question.toLowerCase()
   let best: { score: number; answer: string } = { score: 0, answer: '' }
@@ -80,14 +95,20 @@ export default function AIPage() {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
     { role: 'assistant', content: `Hi! I’m your AI guide. Ask me about my skills, this project’s stack, auth, deployment, or services.` }
   ])
+  const [loading, setLoading] = useState(false)
 
-  function onAsk(e?: React.FormEvent) {
+  async function onAsk(e?: React.FormEvent) {
     if (e) e.preventDefault()
     const q = input.trim()
     if (!q) return
-    const reply = searchKB(q)
-    setMessages((m) => [...m, { role: 'user', content: q }, { role: 'assistant', content: reply }])
+    setMessages((m) => [...m, { role: 'user', content: q }])
     setInput('')
+    setLoading(true)
+    // Try server AI first; fall back to local KB on failure
+    const server = await callBackend(q)
+    const reply = server ?? searchKB(q)
+    setMessages((m) => [...m, { role: 'assistant', content: reply }])
+    setLoading(false)
   }
 
   const suggestions = useMemo(() => [
@@ -126,32 +147,8 @@ export default function AIPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               />
-              <Button type="submit">Ask</Button>
+              <Button type="submit" disabled={loading}>{loading ? 'Thinking…' : 'Ask'}</Button>
             </form>
-
-            {/* Free web search (no API, opens in a new tab) */}
-            <div className="flex gap-2 pt-1">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  const q = input.trim() || 'Onesmus portfolio DevVibe Pro project overview'
-                  window.open(`https://www.perplexity.ai/search?q=${encodeURIComponent(q)}`, '_blank')
-                }}
-              >
-                Search on Perplexity
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  const q = input.trim() || 'Onesmus portfolio DevVibe Pro project overview'
-                  window.open(`https://copilot.microsoft.com/?q=${encodeURIComponent(q)}`, '_blank')
-                }}
-              >
-                Search on Copilot
-              </Button>
-            </div>
 
             <div className="flex flex-wrap gap-2 pt-2">
               {suggestions.map((s, i) => (
@@ -162,7 +159,7 @@ export default function AIPage() {
             </div>
 
             <div className="text-xs text-muted-foreground pt-2">
-              Tip: This is an on-device guide (no external AI calls). If you want real AI responses later, we can connect an API key and a simple server proxy.
+              Tip: Tries the server AI at {DJANGO_BASE}/api/py/ai/ask first, then falls back to a local guide if unavailable.
             </div>
 
             <div className="pt-4 text-sm">

@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
+from core.ai import ask_ai
 
 
 def health(_request):
@@ -41,4 +42,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/py/health', health),
     path('api/py/accounts/', include('accounts.urls')),
+    path('api/py/ai/ask', ask_ai),
 ]

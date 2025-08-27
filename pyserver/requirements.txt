@@ -13,3 +13,6 @@ dj-database-url>=2.2,<3.0
 # Optional Redis cache
 django-redis>=5.4,<6.0
 gunicorn>=22.0,<23.0
+
+# OpenAI SDK for server-side AI proxy
+openai>=1.40,<2.0
