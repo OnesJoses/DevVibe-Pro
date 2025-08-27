@@ -1,8 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Link } from 'react-router-dom'
+
+// Declare Puter.js types
+declare global {
+  interface Window {
+    puter: {
+      ai: {
+        chat: (question: string, options?: { model?: string }) => Promise<{ message: { content: { text: string }[] } }>;
+      };
+    };
+  }
+}
 
 // Build a small in-app knowledge base about you and this project.
 const DJANGO_BASE = (typeof window !== 'undefined' && (window as any).__VITE_DJANGO_API_BASE__) ||
@@ -57,16 +68,17 @@ Backend (Django) is deployed on Render with WhiteNoise for static files and envâ
 
 async function callBackend(question: string): Promise<string | null> {
   try {
-    const res = await fetch(`${DJANGO_BASE}/api/py/ai/ask`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question })
-    })
-    if (!res.ok) return null
-    const data = await res.json().catch(() => null) as any
-    return (data && typeof data.answer === 'string' && data.answer.trim()) ? data.answer : null
-  } catch {
-    return null
+    // Check if Puter.js is loaded
+    if (!window.puter || !window.puter.ai) {
+      console.warn('Puter.js not loaded, falling back to local KB');
+      return null;
+    }
+    // Use Puter.js for free Claude access
+    const response = await window.puter.ai.chat(question, { model: 'claude-sonnet-4' });
+    return response.message.content[0].text || null;
+  } catch (error) {
+    console.error('Puter.js AI error:', error);
+    return null;
   }
 }
 
@@ -97,6 +109,17 @@ export default function AIPage() {
   ])
   const [loading, setLoading] = useState(false)
 
+  // Check Puter.js availability on mount
+  useEffect(() => {
+    console.log('AI Page mounted')
+    console.log('Puter.js available:', !!window.puter)
+    if (window.puter) {
+      console.log('Puter.ai available:', !!window.puter.ai)
+    } else {
+      console.warn('Puter.js not loaded - page will use local knowledge base only')
+    }
+  }, [])
+
   async function onAsk(e?: React.FormEvent) {
     if (e) e.preventDefault()
     const q = input.trim()
@@ -124,7 +147,7 @@ export default function AIPage() {
       <Card className="w-full max-w-3xl">
         <CardHeader>
           <CardTitle>AI Project Guide</CardTitle>
-          <CardDescription>Ask about my skills and how this project is built and deployed.</CardDescription>
+          <CardDescription>Ask about my skills and how this project is built and deployed. Powered by Claude AI.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -159,7 +182,7 @@ export default function AIPage() {
             </div>
 
             <div className="text-xs text-muted-foreground pt-2">
-              Tip: Tries the server AI at {DJANGO_BASE}/api/py/ai/ask first, then falls back to a local guide if unavailable.
+              Tip: Powered by Claude AI via Puter.js; falls back to a local guide if unavailable.
             </div>
 
             <div className="pt-4 text-sm">
