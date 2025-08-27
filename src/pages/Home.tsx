@@ -94,6 +94,7 @@ export default function Home() {
     { name: 'About', path: '/about' },
     { name: 'Services', path: '/services' },
     { name: 'Portfolio', path: '/portfolio' },
+    { name: 'AI Guide', path: '/ai' },
     { name: 'Testimonials', path: '/testimonials' },
     { name: 'Contact', path: '/contact' }
   ]
@@ -342,6 +343,9 @@ export default function Home() {
               </Button>
               <Button asChild variant="outline" size="lg" className="bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white">
                 <Link to="/contact">Let's Connect</Link>
+              </Button>
+              <Button asChild variant="secondary" size="lg" className="bg-white/15 text-white hover:bg-white/25">
+                <Link to="/ai">Ask the AI</Link>
               </Button>
             </div>
 
@@ -647,6 +651,9 @@ export default function Home() {
               <p className="text-muted-foreground mt-2">© 2025 Onesmus M. All rights reserved.</p>
             </div>
             <div className="flex space-x-4">
+              <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <Link to="/ai" aria-label="AI Guide">AI</Link>
+              </Button>
               <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                 <a href="https://github.com/OnesJoses" target="_blank" rel="noreferrer noopener" aria-label="GitHub">
                   <Github className="h-5 w-5" />

@@ -8,20 +8,22 @@ import SettingsPage from './pages/Settings'
 import ProjectDetailPage from './pages/ProjectDetail'
 import ForgotPasswordPage from './pages/ForgotPassword'
 import ResetPasswordPage from './pages/ResetPassword'
+import AIPage from './pages/AI'
 
 export default function App() {
   return (
     <HashRouter>
       <Routes>
-  <Route path="/" element={<HomePage />} />
-  <Route path="/*" element={<HomePage />} />
-  <Route path="/project/:slug" element={<ProjectDetailPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/*" element={<HomePage />} />
+        <Route path="/project/:slug" element={<ProjectDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/ai" element={<AIPage />} />
       </Routes>
     </HashRouter>
   )
