@@ -131,7 +131,7 @@ export default function AIPage() {
       <Card className="w-full max-w-3xl">
         <CardHeader>
           <CardTitle>AI Project Guide</CardTitle>
-          <CardDescription>Ask about my skills and how this project is built and deployed.</CardDescription>
+          <CardDescription>Ask about my skills and how this project is built and deployed. Powered by Claude AI.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
