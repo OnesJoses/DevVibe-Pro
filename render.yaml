@@ -1,0 +1,29 @@
+# Render blueprint for Django backend only
+# If you're deploying a Node service too, create a separate service block.
+services:
+  - type: web
+    name: django-backend
+    env: python
+    region: oregon
+    plan: free
+    rootDir: pyserver
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate --noinput
+    startCommand: gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "localhost,127.0.0.1"
+      - key: DJANGO_CORS
+        value: "https://onesmus-workspace-site.vercel.app,https://onesmus-workspace.onrender.com"
+      - key: DJANGO_CSRF
+        value: "https://onesmus-workspace-site.vercel.app,https://onesmus-workspace.onrender.com"
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false

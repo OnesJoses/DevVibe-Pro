@@ -20,22 +20,23 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [currentRoleIndex, setCurrentRoleIndex] = useState(0)
   const [notice, setNotice] = useState<string | null>(null)
-  const [backendMessage, setBackendMessage] = useState<string>('Connecting to server...')
+  const [backendMessage, setBackendMessage] = useState<string>('Connecting to backend...')
   const navigate = useNavigate()
   const { user, isAuthenticated, hydrate, logout } = useAuthStore()
   const location = useLocation()
 
   useEffect(() => { hydrate() }, [hydrate])
 
-  // Fetch a message from the backend
+  // Fetch a health status from the Django backend
   useEffect(() => {
-    fetch('http://localhost:3001/api/hello')
+    const DJANGO_BASE = (import.meta as any).env?.VITE_DJANGO_API_BASE || 'http://127.0.0.1:8000'
+    fetch(`${DJANGO_BASE}/api/py/health`)
       .then(res => {
         if (!res.ok) throw new Error('Network response was not ok');
         return res.json();
       })
-      .then(data => setBackendMessage(data.message || 'Connected!'))
-      .catch(() => setBackendMessage('Server is offline.'));
+      .then(data => setBackendMessage(data.status ? 'Backend is healthy' : 'Backend responded'))
+      .catch(() => setBackendMessage('Backend is offline.'));
   }, []);
 
   // Show one-time notices passed via sessionStorage (e.g., after profile save)
