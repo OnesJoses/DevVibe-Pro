@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 
-const API_URL = 'http://localhost:3001/api/auth'
+// Django API base: set VITE_DJANGO_API_BASE in Vercel. Dev fallback uses local Django.
+const DJANGO_BASE = (import.meta as any).env?.VITE_DJANGO_API_BASE || 'http://127.0.0.1:8000'
+const API_URL = `${DJANGO_BASE}/api/py/accounts`
 
 export type User = {
   id: number // Changed to number to match the database
@@ -78,7 +80,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw new Error(error.message || 'Registration failed')
     }
     
-    const { token, user } = await response.json()
+  const { token, user } = await response.json()
     set({ user, token, isAuthenticated: true })
     persist({ user, token, settings: get().settings })
   },
