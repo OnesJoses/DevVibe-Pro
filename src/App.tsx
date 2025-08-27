@@ -6,6 +6,8 @@ import RegisterPage from './pages/Register'
 import ProfilePage from './pages/Profile'
 import SettingsPage from './pages/Settings'
 import ProjectDetailPage from './pages/ProjectDetail'
+import ForgotPasswordPage from './pages/ForgotPassword'
+import ResetPasswordPage from './pages/ResetPassword'
 
 export default function App() {
   return (
@@ -18,6 +20,8 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
     </HashRouter>
   )

@@ -43,6 +43,9 @@ export default function LoginPage() {
             <div>
               <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
               <input id="password" type="password" className="w-full px-3 py-2 border border-input rounded-md bg-background" value={password} onChange={e=>setPassword(e.target.value)} required />
+              <div className="text-right mt-1">
+                <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">Forgot password?</Link>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Logging in…' : 'Log in'}</Button>
           </form>
