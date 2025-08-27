@@ -17,8 +17,14 @@ export default function LoginPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    await login(email, password)
-    setLoading(false)
+    try {
+      await login(email, password)
+    } catch (error) {
+      console.error('Login failed:', error)
+      alert(`Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

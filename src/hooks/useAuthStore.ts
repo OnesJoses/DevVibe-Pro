@@ -53,34 +53,58 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   settings: { theme: 'system', language: 'en' },
   isAuthenticated: false,
   async login(email, password) {
+    console.log('Login attempt to:', `${API_URL}/login`)
     const response = await fetch(`${API_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     })
 
+    console.log('Login response status:', response.status)
+    
     if (!response.ok) {
-      const error = await response.json()
+      const errorText = await response.text()
+      console.error('Login error response:', errorText)
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { message: errorText || 'Login failed' }
+      }
       throw new Error(error.message || 'Login failed')
     }
 
-    const { token, user } = await response.json()
+    const result = await response.json()
+    console.log('Login success:', result)
+    const { token, user } = result
     set({ user, token, isAuthenticated: true })
     persist({ user, token, settings: get().settings })
   },
   async register(name, email, password) {
+    console.log('Register attempt to:', `${API_URL}/register`)
     const response = await fetch(`${API_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
     })
 
+    console.log('Register response status:', response.status)
+
     if (!response.ok) {
-      const error = await response.json()
+      const errorText = await response.text()
+      console.error('Register error response:', errorText)
+      let error
+      try {
+        error = JSON.parse(errorText)
+      } catch {
+        error = { message: errorText || 'Registration failed' }
+      }
       throw new Error(error.message || 'Registration failed')
     }
     
-  const { token, user } = await response.json()
+    const result = await response.json()
+    console.log('Register success:', result)
+    const { token, user } = result
     set({ user, token, isAuthenticated: true })
     persist({ user, token, settings: get().settings })
   },

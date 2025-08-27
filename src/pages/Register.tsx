@@ -18,10 +18,16 @@ export default function RegisterPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    await register(name, email, password)
-    setLoading(false)
-    // After successful register, go to profile
-    navigate('/profile')
+    try {
+      await register(name, email, password)
+      // After successful register, go to profile
+      navigate('/profile')
+    } catch (error) {
+      console.error('Registration failed:', error)
+      alert(`Registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
