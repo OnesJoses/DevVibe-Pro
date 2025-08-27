@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -68,6 +68,11 @@ Backend (Django) is deployed on Render with WhiteNoise for static files and env�
 
 async function callBackend(question: string): Promise<string | null> {
   try {
+    // Check if Puter.js is loaded
+    if (!window.puter || !window.puter.ai) {
+      console.warn('Puter.js not loaded, falling back to local KB');
+      return null;
+    }
     // Use Puter.js for free Claude access
     const response = await window.puter.ai.chat(question, { model: 'claude-sonnet-4' });
     return response.message.content[0].text || null;
@@ -103,6 +108,17 @@ export default function AIPage() {
     { role: 'assistant', content: `Hi! I’m your AI guide. Ask me about my skills, this project’s stack, auth, deployment, or services.` }
   ])
   const [loading, setLoading] = useState(false)
+
+  // Check Puter.js availability on mount
+  useEffect(() => {
+    console.log('AI Page mounted')
+    console.log('Puter.js available:', !!window.puter)
+    if (window.puter) {
+      console.log('Puter.ai available:', !!window.puter.ai)
+    } else {
+      console.warn('Puter.js not loaded - page will use local knowledge base only')
+    }
+  }, [])
 
   async function onAsk(e?: React.FormEvent) {
     if (e) e.preventDefault()
