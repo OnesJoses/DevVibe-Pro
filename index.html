@@ -21,6 +21,10 @@
   </script>
   <body>
     <div id="app"></div>
-    <script type="module" src="main.js"></script>
+    <script>
+      // Inject environment variables for production
+      window.__VITE_DJANGO_API_BASE__ = 'https://devvibe-pro.onrender.com';
+    </script>
+    <script src="main.js"></script>
   </body>
 </html>

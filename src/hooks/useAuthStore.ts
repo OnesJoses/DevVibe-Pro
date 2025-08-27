@@ -1,7 +1,9 @@
 import { create } from 'zustand'
 
 // Django API base: set VITE_DJANGO_API_BASE in Vercel. Dev fallback uses local Django.
-const DJANGO_BASE = import.meta.env.VITE_DJANGO_API_BASE || 'http://127.0.0.1:8000'
+const DJANGO_BASE = (typeof window !== 'undefined' && (window as any).__VITE_DJANGO_API_BASE__) || 
+                   (typeof process !== 'undefined' && process.env?.VITE_DJANGO_API_BASE) || 
+                   'http://127.0.0.1:8000'
 const API_URL = `${DJANGO_BASE}/api/py/accounts`
 
 export type User = {
