@@ -4,6 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Link } from 'react-router-dom'
 
+// Declare Puter.js types
+declare global {
+  interface Window {
+    puter: {
+      ai: {
+        chat: (question: string, options?: { model?: string }) => Promise<{ message: { content: { text: string }[] } }>;
+      };
+    };
+  }
+}
+
 // Build a small in-app knowledge base about you and this project.
 const DJANGO_BASE = (typeof window !== 'undefined' && (window as any).__VITE_DJANGO_API_BASE__) ||
   (typeof process !== 'undefined' && (process as any).env?.VITE_DJANGO_API_BASE) ||
@@ -57,16 +68,12 @@ Backend (Django) is deployed on Render with WhiteNoise for static files and envâ
 
 async function callBackend(question: string): Promise<string | null> {
   try {
-    const res = await fetch(`${DJANGO_BASE}/api/py/ai/ask`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question })
-    })
-    if (!res.ok) return null
-    const data = await res.json().catch(() => null) as any
-    return (data && typeof data.answer === 'string' && data.answer.trim()) ? data.answer : null
-  } catch {
-    return null
+    // Use Puter.js for free Claude access
+    const response = await window.puter.ai.chat(question, { model: 'claude-sonnet-4' });
+    return response.message.content[0].text || null;
+  } catch (error) {
+    console.error('Puter.js AI error:', error);
+    return null;
   }
 }
 
@@ -159,7 +166,7 @@ export default function AIPage() {
             </div>
 
             <div className="text-xs text-muted-foreground pt-2">
-              Tip: Tries the server AI at {DJANGO_BASE}/api/py/ai/ask first, then falls back to a local guide if unavailable.
+              Tip: Powered by Claude AI via Puter.js; falls back to a local guide if unavailable.
             </div>
 
             <div className="pt-4 text-sm">
