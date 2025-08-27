@@ -24,8 +24,34 @@ def ask_ai(request):
 		return JsonResponse({"message": "OpenAI SDK not installed on server"}, status=500)
 
 	try:
-		data = json.loads(request.body.decode("utf-8"))
-		question = (data.get("question") or "").strip()
+		# Prefer DRF parsing to handle JSON or form data gracefully
+		question = None
+		try:
+			if hasattr(request, "data"):
+				q = request.data.get("question")  # type: ignore[attr-defined]
+				if isinstance(q, str):
+					question = q.strip()
+		except Exception:
+			pass
+
+		# Fallbacks: traditional POST/GET or raw body JSON
+		if not question:
+			q = request.POST.get("question") or request.GET.get("question")
+			if isinstance(q, str):
+				question = q.strip()
+		if not question:
+			try:
+				raw = request.body.decode("utf-8")
+				if raw:
+					data = json.loads(raw)
+					q = data.get("question") if isinstance(data, dict) else None
+					if isinstance(q, str):
+						question = q.strip()
+			except Exception:
+				# Ignore raw JSON errors; we'll report missing question below
+				pass
+
+		question = question or ""
 		if not question:
 			return JsonResponse({"message": "Missing 'question'"}, status=400)
 
