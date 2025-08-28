@@ -171,6 +171,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Backend health status banner */}
+      <div className="fixed top-2 right-2 z-50 text-xs">
+        <span className="inline-block px-2 py-1 rounded-md border bg-card/50">
+          API: {backendMessage}
+        </span>
+      </div>
       {notice && (
         <div role="status" aria-live="polite" className="fixed top-2 left-1/2 -translate-x-1/2 z-50">
           <div className="rounded-md bg-emerald-600 text-white px-4 py-2 shadow">

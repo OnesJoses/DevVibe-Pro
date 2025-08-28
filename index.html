@@ -20,7 +20,20 @@
     )
   </script>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!-- Fallback content so the page isn't blank before JS loads -->
+      <style>
+        .boot-fallback{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;color:#111}
+        .boot-fallback .dot{width:10px;height:10px;border-radius:50%;background:#111;margin-left:.5rem;animation:bounce .9s infinite alternate}
+        @keyframes bounce{to{transform:translateY(-6px);opacity:.6}}
+      </style>
+      <div class="boot-fallback" role="status" aria-live="polite">
+        <span>Loading app…</span><span class="dot"></span>
+      </div>
+      <noscript>
+        <div style="padding:16px;text-align:center">This site requires JavaScript enabled.</div>
+      </noscript>
+    </div>
     <script>
       // Inject environment variables for production
       window.__VITE_DJANGO_API_BASE__ = 'https://devvibe-pro.onrender.com';
