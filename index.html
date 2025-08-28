@@ -38,6 +38,12 @@
   // Inject API base for local development (avoid Render CORS during dev)
   window.__VITE_DJANGO_API_BASE__ = 'http://127.0.0.1:8000';
     </script>
-  <script src="main.js"></script>
+      <script>
+      // Set API base: use env var for production, fallback to Render for dev
+      window.__VITE_DJANGO_API_BASE__ = 
+        (typeof process !== 'undefined' && process.env?.VITE_DJANGO_API_BASE) ||
+        'https://devvibe-pro.onrender.com';
+    </script>
+    <script src="main.js"></script>
   </body>
 </html>
