@@ -35,8 +35,8 @@
       </noscript>
     </div>
     <script>
-      // Inject environment variables for production
-      window.__VITE_DJANGO_API_BASE__ = 'https://devvibe-pro.onrender.com';
+  // Inject API base for local development (avoid Render CORS during dev)
+  window.__VITE_DJANGO_API_BASE__ = 'http://127.0.0.1:8000';
     </script>
   <script src="main.js"></script>
   </body>
