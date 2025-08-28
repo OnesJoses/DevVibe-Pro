@@ -3,11 +3,25 @@ import { rimraf } from 'rimraf'
 import stylePlugin from 'esbuild-style-plugin'
 import autoprefixer from 'autoprefixer'
 import tailwindcss from 'tailwindcss'
+import { config } from 'dotenv'
+
+// Load environment variables from .env file
+config()
 
 const args = process.argv.slice(2)
 const isProd = args[0] === '--production'
 
 await rimraf('dist')
+
+// Define environment variables for the client
+const define = {}
+for (const key in process.env) {
+  if (key.startsWith('VITE_')) {
+    define[`import.meta.env.${key}`] = JSON.stringify(process.env[key])
+  }
+}
+// Also define import.meta.env.MODE
+define['import.meta.env.MODE'] = JSON.stringify(isProd ? 'production' : 'development')
 
 /**
  * @type {esbuild.BuildOptions}
@@ -24,6 +38,7 @@ const esbuildOpts = {
   minify: isProd,
   treeShaking: true,
   jsx: 'automatic',
+  define,
   loader: {
     '.html': 'copy',
     '.png': 'file',
@@ -48,4 +63,5 @@ if (isProd) {
   hosts.forEach((host) => {
     console.log(`http://${host}:${port}`)
   })
+  await new Promise(() => {})
 }

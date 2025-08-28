@@ -1,15 +1,11 @@
 import { create } from 'zustand'
-
-// Django API base: set VITE_DJANGO_API_BASE in Vercel. Dev fallback uses local Django.
-const DJANGO_BASE = (typeof window !== 'undefined' && (window as any).__VITE_DJANGO_API_BASE__) || 
-                   (typeof process !== 'undefined' && process.env?.VITE_DJANGO_API_BASE) || 
-                   'http://127.0.0.1:8000'
-const API_URL = `${DJANGO_BASE}/api/py/accounts`
+import { supabase } from '../lib/supabaseClient'
+import { Session } from '@supabase/supabase-js'
 
 export type User = {
-  id: number // Changed to number to match the database
+  id: string // Supabase uses UUIDs for user IDs
   name: string | null
-  email: string
+  email: string | undefined
   avatarUrl?: string
 }
 
@@ -20,26 +16,27 @@ export type Settings = {
 
 type AuthState = {
   user: User | null
-  token: string | null
+  session: Session | null // Store the full Supabase session
   settings: Settings
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
   updateProfile: (updates: Partial<User>) => void
   updateSettings: (updates: Partial<Settings>) => void
+  setSession: (session: Session | null) => void // To be called by the auth state change listener
   hydrate: () => void
 }
 
 const STORAGE_KEY = 'devvibe_auth'
 
-function persist(state: Pick<AuthState, 'user' | 'token' | 'settings'>) {
+function persist(state: { user: User | null; token: string | null; settings: Settings }) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {}
 }
 
-function readPersisted(): Partial<Pick<AuthState, 'user' | 'token' | 'settings'>> {
+function readPersisted(): Partial<{ user: User; token: string; settings: Settings }> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return {}
@@ -51,85 +48,79 @@ function readPersisted(): Partial<Pick<AuthState, 'user' | 'token' | 'settings'>
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: null,
+  session: null,
   settings: { theme: 'system', language: 'en' },
   isAuthenticated: false,
+
+  setSession: (session) => {
+    if (session) {
+      const user: User = {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.user_metadata?.name || null,
+        avatarUrl: session.user.user_metadata?.avatar_url || undefined,
+      }
+      set({ session, user, isAuthenticated: true })
+      persist({ user, token: session.access_token, settings: get().settings })
+    } else {
+      set({ session: null, user: null, isAuthenticated: false })
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  },
+
   async login(email, password) {
-    console.log('Login attempt to:', `${API_URL}/login`)
-    const response = await fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     })
-
-    console.log('Login response status:', response.status)
-    
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Login error response:', errorText)
-      let error
-      try {
-        error = JSON.parse(errorText)
-      } catch {
-        error = { message: errorText || 'Login failed' }
-      }
-      throw new Error(error.message || 'Login failed')
-    }
-
-    const result = await response.json()
-    console.log('Login success:', result)
-    const { token, user } = result
-    set({ user, token, isAuthenticated: true })
-    persist({ user, token, settings: get().settings })
+    if (error) throw error
+    // The onAuthStateChange listener will handle setting the session
   },
+
   async register(name, email, password) {
-    console.log('Register attempt to:', `${API_URL}/register`)
-    const response = await fetch(`${API_URL}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name, // You can pass extra data to be stored in user_metadata
+        },
+      },
     })
+    if (error) throw error
+    // The onAuthStateChange listener will handle setting the session
+  },
 
-    console.log('Register response status:', response.status)
+  async logout() {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+    // The onAuthStateChange listener will handle clearing the session
+  },
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Register error response:', errorText)
-      let error
-      try {
-        error = JSON.parse(errorText)
-      } catch {
-        error = { message: errorText || 'Registration failed' }
-      }
-      throw new Error(error.message || 'Registration failed')
-    }
-    
-    const result = await response.json()
-    console.log('Register success:', result)
-    const { token, user } = result
-    set({ user, token, isAuthenticated: true })
-    persist({ user, token, settings: get().settings })
+  updateProfile: (updates) => {
+    set((state) => {
+      if (!state.user) return state
+      const updatedUser = { ...state.user, ...updates }
+      persist({ user: updatedUser, token: state.session?.access_token || null, settings: state.settings })
+      return { user: updatedUser }
+    })
   },
-  logout() {
-    set({ user: null, token: null, isAuthenticated: false })
-    persist({ user: null, token: null, settings: get().settings })
+
+  updateSettings: (updates) => {
+    set((state) => {
+      const updatedSettings = { ...state.settings, ...updates }
+      persist({ user: state.user, token: state.session?.access_token || null, settings: updatedSettings })
+      return { settings: updatedSettings }
+    })
   },
-  updateProfile(updates) {
-    // This should ideally be an API call to a /profile endpoint
-    const user = { ...(get().user as User), ...updates }
-    set({ user })
-    persist({ user, token: get().token, settings: get().settings })
-  },
-  updateSettings(updates) {
-    const settings = { ...get().settings, ...updates }
-    set({ settings })
-    persist({ user: get().user, token: get().token, settings })
-  },
-  hydrate() {
+
+  hydrate: () => {
+    // Hydration is now primarily handled by the onAuthStateChange listener,
+    // which runs on app load and restores the session from Supabase.
+    // This function can be kept for settings or other non-session state.
     const persisted = readPersisted()
-    const user = persisted.user ?? null
-    const token = persisted.token ?? null
-    const settings = persisted.settings ?? { theme: 'system', language: 'en' }
-    set({ user, token, settings, isAuthenticated: !!token })
+    if (persisted.settings) {
+      set({ settings: persisted.settings })
+    }
   },
 }))

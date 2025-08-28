@@ -19,6 +19,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await login(email, password)
+      // Navigation will be handled by the useEffect when isAuthenticated changes
     } catch (error) {
       console.error('Login failed:', error)
       alert(`Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`)

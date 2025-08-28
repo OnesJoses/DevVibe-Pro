@@ -20,8 +20,9 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       await register(name, email, password)
-      // After successful register, go to profile
-      navigate('/profile')
+      // With Supabase, the user might need to confirm their email first
+      // Navigation will be handled by the useEffect when isAuthenticated changes
+      alert('Registration successful! Please check your email to confirm your account.')
     } catch (error) {
       console.error('Registration failed:', error)
       alert(`Registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
