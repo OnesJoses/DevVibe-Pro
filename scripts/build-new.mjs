@@ -5,16 +5,15 @@ import autoprefixer from 'autoprefixer'
 import tailwindcss from 'tailwindcss'
 
 const args = process.argv.slice(2)
-const isProd = args[0] === '--production'
+const isProd = args.includes('--production')
 
-console.log('Starting build script...')
+console.log('[build-new] Starting build script...')
 
-// Clean dist directory
 try {
   await rimraf('dist')
-  console.log('Cleaned dist directory')
+  console.log('[build-new] Cleaned dist directory')
 } catch (e) {
-  console.log('Could not clean dist:', e.message)
+  console.log('[build-new] Could not clean dist:', e?.message || e)
 }
 
 const esbuildOpts = {
@@ -29,49 +28,26 @@ const esbuildOpts = {
   minify: isProd,
   treeShaking: true,
   jsx: 'automatic',
-  loader: {
-    '.html': 'copy',
-    '.png': 'file',
-  },
+  loader: { '.html': 'copy', '.png': 'file' },
   plugins: [
-    stylePlugin({
-      postcss: {
-        plugins: [tailwindcss, autoprefixer],
-      },
-    }),
+    stylePlugin({ postcss: { plugins: [tailwindcss, autoprefixer] } }),
   ],
 }
 
 if (isProd) {
-  console.log('Building for production...')
+  console.log('[build-new] Building for production...')
   await esbuild.build(esbuildOpts)
-  console.log('Production build complete!')
+  console.log('[build-new] Production build complete!')
 } else {
-  console.log('Starting development server...')
-  try {
-    const ctx = await esbuild.context(esbuildOpts)
-    console.log('Created esbuild context')
-    
-    await ctx.watch()
-    console.log('Started file watcher')
-    
-    const result = await ctx.serve({ 
-      port: 5174,
-      host: '127.0.0.1'
-    })
-    
-    console.log(`Development server running on:`)
-    console.log(`http://127.0.0.1:${result.port}`)
-    
-    // Keep the process alive
-    process.on('SIGTERM', async () => {
-      console.log('Shutting down...')
-      await ctx.dispose()
-      process.exit(0)
-    })
-    
-  } catch (error) {
-    console.error('Error starting development server:', error)
-    process.exit(1)
-  }
+  console.log('[build-new] Starting development server...')
+  const ctx = await esbuild.context(esbuildOpts)
+  await ctx.watch()
+  const { hosts, port } = await ctx.serve({ port: 5173 })
+  console.log('[build-new] Running on:')
+  for (const h of hosts) console.log(`http://${h}:${port}`)
+  process.on('SIGTERM', async () => {
+    console.log('[build-new] Shutting down...')
+    await ctx.dispose()
+    process.exit(0)
+  })
 }
