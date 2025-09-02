@@ -6,18 +6,21 @@ import {
   levenshteinDistance, 
   extractKeywords 
 } from './ai-utils'
+import { EnhancedWebSearch, WebSearchResult, shouldUseWebSearch, formatSearchResults } from './web-search'
 
 /**
- * Enhanced Local Knowledge Base with semantic search capabilities
- * Runs entirely in the browser without external dependencies
+ * Enhanced Local Knowledge Base with semantic search capabilities and web search integration
+ * Runs entirely in the browser with optional web search fallback
  */
 export class EnhancedLocalKnowledgeBase {
   private entries: KnowledgeEntry[] = []
   private embedding: LocalTextEmbedding
+  private webSearch: EnhancedWebSearch
   private isInitialized = false
 
   constructor() {
     this.embedding = new LocalTextEmbedding()
+    this.webSearch = new EnhancedWebSearch()
   }
 
   /**
@@ -507,7 +510,7 @@ I specialize in projects where technical excellence meets business strategy. Let
   }
 
   /**
-   * Enhanced search with multiple matching strategies
+   * Enhanced search with multiple matching strategies and web search integration
    */
   async search(query: string, options = { maxResults: 3, threshold: 0.3 }): Promise<SearchResult[]> {
     if (!this.isInitialized) {
@@ -599,6 +602,86 @@ I specialize in projects where technical excellence meets business strategy. Let
     return results
       .sort((a, b) => b.relevance - a.relevance)
       .slice(0, options.maxResults)
+  }
+
+  /**
+   * Smart search that combines local knowledge with web search
+   */
+  async smartSearch(query: string, options = { maxResults: 3, threshold: 0.3, includeWebSearch: true }): Promise<{
+    localResults: SearchResult[]
+    webResults?: WebSearchResult[]
+    searchStrategy: 'local-only' | 'web-only' | 'hybrid'
+    response: string
+  }> {
+    // First, try local search
+    const localResults = await this.search(query, options)
+
+    // Determine search strategy
+    const useWebSearch = options.includeWebSearch && shouldUseWebSearch(query)
+    const hasGoodLocalResults = localResults.length > 0 && localResults[0].relevance > 0.6
+
+    if (!useWebSearch || hasGoodLocalResults) {
+      // Use local results only
+      const response = localResults.length > 0 
+        ? this.formatLocalResults(localResults)
+        : this.getFallbackResponse().entry.content
+
+      return {
+        localResults,
+        searchStrategy: 'local-only',
+        response
+      }
+    }
+
+    // Use web search for general information queries
+    try {
+      const webResults = await this.webSearch.search(query, 3)
+      
+      if (webResults.length > 0) {
+        const response = formatSearchResults(webResults)
+        
+        return {
+          localResults,
+          webResults,
+          searchStrategy: localResults.length > 0 ? 'hybrid' : 'web-only',
+          response
+        }
+      }
+    } catch (error) {
+      console.warn('Web search failed, falling back to local results:', error)
+    }
+
+    // Fallback to local results or default response
+    const response = localResults.length > 0 
+      ? this.formatLocalResults(localResults)
+      : this.getFallbackResponse().entry.content
+
+    return {
+      localResults,
+      searchStrategy: 'local-only',
+      response
+    }
+  }
+
+  /**
+   * Format local search results for display
+   */
+  private formatLocalResults(results: SearchResult[]): string {
+    if (results.length === 0) return this.getFallbackResponse().entry.content
+
+    const primaryResult = results[0]
+    let response = primaryResult.entry.content
+
+    // Add context about match quality
+    if (results.length > 1) {
+      response += `\n\n**Related Information:**`
+      results.slice(1).forEach((result, index) => {
+        const snippet = result.entry.content.substring(0, 150) + '...'
+        response += `\n${index + 2}. **${result.entry.title}**: ${snippet}`
+      })
+    }
+
+    return response
   }
 
   /**

@@ -14,25 +14,20 @@ export default function AIPage() {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string; title?: string; relevance?: number; matchType?: string; matchedTerms?: string[] }[]>([
     { 
       role: 'assistant', 
-      title: 'Enhanced AI Assistant with Web Search! 🧠🌐',
-      content: `Welcome! I'm your intelligent project guide powered by advanced local AI with **web search capabilities**. I can provide detailed answers from both my comprehensive knowledge base and real-time web searches.
+      title: 'Enhanced AI Assistant Ready! 🧠',
+      content: `Welcome! I'm your intelligent project guide powered by advanced local AI. I can provide detailed, contextual answers about my development services, technical expertise, and business processes.
 
 **🚀 Enhanced Capabilities:**
 • **Semantic Understanding** - I understand context and meaning, not just keywords
-• **Local Knowledge Base** - Deep expertise about my services, tech stack, and processes
-• **Web Search Integration** - Real-time information from the internet when needed
-• **Smart Routing** - Automatically chooses local vs web search for optimal results
-• **Multiple Sources** - Privacy-focused search via DuckDuckGo and SearXNG
+• **Comprehensive Knowledge** - Deep expertise across development, design, and business
+• **Smart Matching** - Multiple search strategies for the best answers
+• **Learning System** - I track popular questions to improve responses
 
-**💡 Try These Queries:**
-• **Local Expertise**: "What services do you offer?" "Your development process?"
-• **Web Search**: "Latest React 18 features" "Best practices for Node.js security"
-• **Hybrid**: "How do you implement modern authentication?" "Current web development trends"
-
-**🔍 Search Strategy:**
-- **Personal/Business questions** → Local knowledge base (instant, detailed)
-- **Technical/General queries** → Web search (current, comprehensive) 
-- **Hybrid approach** → Best of both sources
+**💡 Try These Advanced Queries:**
+• "Compare your React expertise with Django capabilities"
+• "What's the ROI timeline for a SaaS project?"
+• "How do you handle security in e-commerce applications?"
+• "Walk me through your development process for startups"
 
 What would you like to explore?`
     }
@@ -59,38 +54,19 @@ What would you like to explore?`
     setLoading(true)
 
     try {
-      // Use enhanced smart search with web search integration
-      const searchResult = await knowledgeBase.smartSearch(query, { 
-        maxResults: 1, 
-        threshold: 0.2, 
-        includeWebSearch: true 
-      })
+      // Use enhanced search with semantic understanding
+      const results = await knowledgeBase.search(query, { maxResults: 1, threshold: 0.2 })
       
       let response
-      if (searchResult.localResults.length > 0 && searchResult.searchStrategy !== 'web-only') {
-        // Use local knowledge base result
-        const bestResult = searchResult.localResults[0]
-        const strategyBadge = searchResult.searchStrategy === 'hybrid' 
-          ? ' + Web Search' 
-          : ''
-        
+      if (results.length > 0) {
+        const bestResult = results[0]
         response = {
           role: 'assistant' as const,
-          title: `${bestResult.entry.title} (${Math.round(bestResult.relevance * 100)}% match${strategyBadge})`,
-          content: searchResult.response,
+          title: `${bestResult.entry.title} (${Math.round(bestResult.relevance * 100)}% match)`,
+          content: bestResult.entry.content,
           relevance: bestResult.relevance,
           matchType: bestResult.matchType,
           matchedTerms: bestResult.matchedTerms
-        }
-      } else if (searchResult.webResults && searchResult.webResults.length > 0) {
-        // Use web search results
-        response = {
-          role: 'assistant' as const,
-          title: `Web Search Results (${searchResult.webResults.length} sources found)`,
-          content: searchResult.response,
-          relevance: 0.8,
-          matchType: 'web-search',
-          matchedTerms: ['web', 'search', 'external']
         }
       } else {
         // Use fallback response
@@ -98,7 +74,7 @@ What would you like to explore?`
         response = {
           role: 'assistant' as const,
           title: fallback.entry.title,
-          content: searchResult.response,
+          content: fallback.entry.content,
           relevance: fallback.relevance,
           matchType: fallback.matchType,
           matchedTerms: fallback.matchedTerms
@@ -110,35 +86,35 @@ What would you like to explore?`
         setMessages(prev => [...prev, response])
         setStats(knowledgeBase.getStats())
         setLoading(false)
-      }, 1200) // Slightly longer for web search
+      }, 800)
 
     } catch (error) {
       console.error('Search error:', error)
       setMessages(prev => [...prev, {
         role: 'assistant',
         title: 'Search Error',
-        content: 'I encountered an issue processing your question. This might be due to network connectivity for web search. Please try again or ask about my services, tech stack, or pricing for local information.'
+        content: 'I encountered an issue processing your question. Please try rephrasing your query or ask about my services, tech stack, or pricing.'
       }])
       setLoading(false)
     }
   }
 
   const quickActions = useMemo(() => [
-    { icon: <Code className="h-4 w-4" />, text: 'What services do you offer?', category: 'Local Knowledge', color: 'bg-blue-50 hover:bg-blue-100 border-blue-200' },
-    { icon: <Globe className="h-4 w-4" />, text: 'Latest React 18 features and updates', category: 'Web Search', color: 'bg-green-50 hover:bg-green-100 border-green-200' },
-    { icon: <Palette className="h-4 w-4" />, text: 'How much does a custom web app cost?', category: 'Local Knowledge', color: 'bg-purple-50 hover:bg-purple-100 border-purple-200' },
-    { icon: <BookOpen className="h-4 w-4" />, text: 'Current web development trends 2024', category: 'Web Search', color: 'bg-orange-50 hover:bg-orange-100 border-orange-200' },
-    { icon: <HelpCircle className="h-4 w-4" />, text: 'How do we get started working together?', category: 'Local Knowledge', color: 'bg-pink-50 hover:bg-pink-100 border-pink-200' },
-    { icon: <Lightbulb className="h-4 w-4" />, text: 'Best practices for Node.js security', category: 'Web Search', color: 'bg-yellow-50 hover:bg-yellow-100 border-yellow-200' }
+    { icon: <Code className="h-4 w-4" />, text: 'What services do you offer?', category: 'Services', color: 'bg-blue-50 hover:bg-blue-100 border-blue-200' },
+    { icon: <Globe className="h-4 w-4" />, text: 'Explain your complete tech stack', category: 'Technical', color: 'bg-green-50 hover:bg-green-100 border-green-200' },
+    { icon: <Palette className="h-4 w-4" />, text: 'How much does a custom web app cost?', category: 'Business', color: 'bg-purple-50 hover:bg-purple-100 border-purple-200' },
+    { icon: <BookOpen className="h-4 w-4" />, text: 'Walk me through your development process', category: 'Process', color: 'bg-orange-50 hover:bg-orange-100 border-orange-200' },
+    { icon: <HelpCircle className="h-4 w-4" />, text: 'How do we get started working together?', category: 'Contact', color: 'bg-pink-50 hover:bg-pink-100 border-pink-200' },
+    { icon: <Lightbulb className="h-4 w-4" />, text: 'Security best practices for web applications', category: 'Technical', color: 'bg-yellow-50 hover:bg-yellow-100 border-yellow-200' }
   ], [])
 
   const advancedQueries = useMemo(() => [
-    "Compare React vs Vue.js performance in 2024",
+    "Compare React vs Vue.js for my project needs",
     "ROI timeline for e-commerce vs SaaS development", 
     "How do you ensure GDPR compliance in web apps?",
-    "Latest TypeScript features and best practices",
-    "Performance optimization for high-traffic websites",
-    "Modern authentication methods for web applications"
+    "What's included in your enterprise package?",
+    "Performance optimization strategies for high-traffic sites",
+    "Integration options with existing business systems"
   ], [])
 
   return (
