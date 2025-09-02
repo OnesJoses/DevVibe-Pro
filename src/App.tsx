@@ -10,6 +10,9 @@ import ForgotPasswordPage from './pages/ForgotPassword'
 import ResetPasswordPage from './pages/ResetPassword'
 import AIPage from './pages/AI'
 import AdminHelperPage from './pages/AdminHelper'
+import EcommerceDemo from './pages/demos/EcommerceDemo'
+import DashboardDemo from './pages/demos/DashboardDemo'
+import RestaurantDemo from './pages/demos/RestaurantDemo'
 import { useAuthStore } from './hooks/useAuthStore'
 import { supabase } from './lib/supabaseClient'
 
@@ -52,6 +55,9 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/ai" element={<AIPage />} />
         <Route path="/admin-helper" element={<AdminHelperPage />} />
+        <Route path="/demo/ecommerce" element={<EcommerceDemo />} />
+        <Route path="/demo/dashboard" element={<DashboardDemo />} />
+        <Route path="/demo/restaurant" element={<RestaurantDemo />} />
       </Routes>
     </HashRouter>
   )

@@ -102,23 +102,21 @@ export default function Home() {
   const services = [
     {
       icon: <Code className="h-8 w-8" />,
-      title: "Web Development",
-      description: "Crafting scalable, high-performance web applications with cutting-edge technologies."
+      title: "Full-Stack Web Development",
+      description: "Building lightning-fast, secure web applications with React, TypeScript, Node.js, and modern cloud infrastructure. From MVP to enterprise-scale solutions.",
+      technologies: ["React", "TypeScript", "Node.js", "PostgreSQL", "AWS"]
     },
     {
       icon: <Palette className="h-8 w-8" />,
-      title: "UI/UX Design",
-      description: "Designing intuitive, beautiful interfaces that delight users and drive engagement."
-    },
-    {
-      icon: <Smartphone className="h-8 w-8" />,
-      title: "Mobile Development",
-      description: "Building responsive, native-feeling mobile experiences for all platforms."
+      title: "UI/UX Design & Development",
+      description: "Creating conversion-focused designs that blend beautiful aesthetics with seamless user experiences. From wireframes to pixel-perfect implementation.",
+      technologies: ["Figma", "Tailwind CSS", "Framer Motion", "Design Systems", "A/B Testing"]
     },
     {
       icon: <Globe className="h-8 w-8" />,
-      title: "Digital Strategy",
-      description: "Transforming ideas into digital solutions that make an impact and drive growth."
+      title: "Digital Transformation",
+      description: "Modernizing legacy systems and launching digital products that scale. Complete tech strategy, architecture design, and implementation roadmaps.",
+      technologies: ["Cloud Migration", "API Design", "DevOps", "Performance Optimization", "Security"]
     }
   ]
 
@@ -314,8 +312,8 @@ export default function Home() {
 
             {/* Description */}
             <p className="text-lg md:text-xl text-white/70 max-w-3xl mx-auto leading-relaxed">
-              I transform ideas into exceptional digital experiences. With a passion for clean code and beautiful design, 
-              I craft solutions that not only look stunning but deliver measurable results.
+              I build revenue-generating web applications that scale from startup MVP to enterprise solutions. 
+              Combining technical excellence with strategic thinking to deliver digital products that actually work.
             </p>
 
             {/* CTA Buttons */}
@@ -371,16 +369,27 @@ export default function Home() {
               </div>
               
               <p className="text-lg text-muted-foreground leading-relaxed">
-                I'm a passionate full-stack developer and UI/UX designer with over 5 years of experience creating digital solutions that drive results. My approach combines technical expertise with creative vision to deliver exceptional user experiences.
+                I'm a results-driven full-stack developer and digital strategist with 5+ years building scalable web applications that generate real ROI. I've helped startups launch MVPs and enterprises modernize legacy systems, consistently delivering on time and under budget.
               </p>
               
               <p className="text-lg text-muted-foreground leading-relaxed">
-                I specialize in modern web technologies and have a keen eye for design. Whether it's building scalable web applications or crafting beautiful interfaces, I'm committed to delivering quality work that exceeds expectations.
+                My approach focuses on business outcomes first - every line of code and design decision serves a strategic purpose. From e-commerce platforms that increase conversions to dashboards that drive data-driven decisions, I build solutions that move the needle.
               </p>
               
+              <div className="grid grid-cols-2 gap-6 py-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">50+</div>
+                  <div className="text-sm text-muted-foreground">Projects Delivered</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">98%</div>
+                  <div className="text-sm text-muted-foreground">Client Satisfaction</div>
+                </div>
+              </div>
+              
               <div className="flex flex-wrap gap-2">
-                {['React', 'TypeScript', 'Node.js', 'UI/UX Design', 'Tailwind CSS', 'Next.js', 'GraphQL', 'MongoDB'].map((skill) => (
-                  <Badge key={skill} variant="secondary" className="text-sm">
+                {['React/TypeScript', 'Node.js/Express', 'PostgreSQL', 'AWS/Vercel', 'Figma to Code', 'API Design', 'Performance Optimization', 'DevOps'].map((skill) => (
+                  <Badge key={skill} variant="secondary" className="text-sm bg-gradient-to-r from-blue-50 to-purple-50 text-blue-800 border-0">
                     {skill}
                   </Badge>
                 ))}
@@ -420,25 +429,39 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="space-y-4">
-              <h2 className="text-3xl md:text-4xl font-bold">My Services</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">How I Drive Your Success</h2>
               <div className="w-20 h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded mx-auto"></div>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                I offer comprehensive digital solutions to help your business thrive in the digital landscape
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                Three core competencies that transform your business goals into profitable digital solutions. 
+                From concept to deployment, I deliver measurable results that scale.
               </p>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service, index) => (
-              <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-0 bg-card/50 backdrop-blur-sm">
+              <Card key={index} className="group hover:shadow-xl transition-all duration-300 border-0 bg-card/50 backdrop-blur-sm hover:bg-card/70">
                 <CardHeader className="text-center">
-                  <div className="mx-auto mb-4 p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full w-16 h-16 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                  <div className="mx-auto mb-4 p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full w-20 h-20 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
                     {service.icon}
                   </div>
-                  <CardTitle className="text-lg">{service.title}</CardTitle>
+                  <CardTitle className="text-xl font-bold mb-2">{service.title}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-center">{service.description}</CardDescription>
+                <CardContent className="text-center space-y-4">
+                  <CardDescription className="text-base leading-relaxed">{service.description}</CardDescription>
+                  {service.technologies && (
+                    <div className="flex flex-wrap gap-2 justify-center pt-2">
+                      {service.technologies.map((tech, techIndex) => (
+                        <Badge 
+                          key={techIndex} 
+                          variant="secondary" 
+                          className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border-0"
+                        >
+                          {tech}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -451,17 +474,18 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="space-y-4">
-              <h2 className="text-3xl md:text-4xl font-bold">Featured Portfolio</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">Interactive Portfolio Demos</h2>
               <div className="w-20 h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded mx-auto"></div>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                A showcase of my recent work and creative projects
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                Don't just read about what I do - experience it. Click "Live Demo" to interact with fully functional applications 
+                that showcase real-world solutions and modern development practices.
               </p>
             </div>
           </div>
           
           {/* Filter Buttons */}
           <div className="flex flex-wrap justify-center gap-2 mb-12">
-            {['all', 'web', 'design', 'mobile'].map((filter) => (
+            {['all', 'web', 'design'].map((filter) => (
               <Button
                 key={filter}
                 variant={activeFilter === filter ? 'default' : 'outline'}
@@ -477,7 +501,7 @@ export default function Home() {
           {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project, index) => (
-              <Card key={index} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-card/50 backdrop-blur-sm relative">
+              <Card key={index} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-card/50 backdrop-blur-sm">
                 <div className="aspect-video overflow-hidden relative">
                   <img 
                     src={project.image} 
@@ -487,17 +511,43 @@ export default function Home() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{project.category}</span>
+                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                        {project.category}
+                      </Badge>
                       <ExternalLink className="h-4 w-4" />
                     </div>
                   </div>
                 </div>
-                {/* Full-card internal link to project detail */}
-                <Link to={`/project/${project.slug}`} className="absolute inset-0" aria-label={`Open ${project.title}`}></Link>
                 <CardHeader>
                   <CardTitle className="text-lg">{project.title}</CardTitle>
                   <CardDescription>{project.description}</CardDescription>
+                  {project.technologies && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {project.technologies.slice(0, 3).map((tech, techIndex) => (
+                        <Badge key={techIndex} variant="outline" className="text-xs">
+                          {tech}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex gap-2">
+                    {project.demoUrl && (
+                      <Link to={project.demoUrl} className="flex-1">
+                        <Button variant="default" size="sm" className="w-full">
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Live Demo
+                        </Button>
+                      </Link>
+                    )}
+                    <Link to={`/project/${project.slug}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        View Details
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
               </Card>
             ))}
           </div>
