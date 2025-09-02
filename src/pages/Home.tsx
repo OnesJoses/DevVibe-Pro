@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ChevronDown, Github, Linkedin, Mail, ExternalLink, Code, Palette, Smartphone, Globe, ArrowRight, Star } from 'lucide-react'
+import { ChevronDown, Github, Linkedin, Mail, ExternalLink, Code, Palette, Smartphone, Globe, ArrowRight } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { useAuthStore } from '@/hooks/useAuthStore'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
@@ -123,27 +123,6 @@ export default function Home() {
   ]
 
   const projects = allProjects
-
-  const testimonials = [
-    {
-      name: "Sarah Johnson",
-      role: "CEO, TechStart Inc.",
-      content: "Exceptional work! The platform exceeded our expectations and increased conversions by 40%. Their attention to detail and innovative approach is outstanding.",
-  avatar: "https://i.pravatar.cc/128?img=12"
-    },
-    {
-      name: "Michael Chen",
-      role: "Marketing Director, BrandCo",
-      content: "A true professional who delivers beyond expectations. Our brand transformation has been incredible, and user engagement has skyrocketed.",
-  avatar: "https://i.pravatar.cc/128?img=32"
-    },
-    {
-      name: "Emily Rodriguez",
-      role: "Founder, StartupHub",
-      content: "The mobile app they created is intuitive and has significantly improved user retention. Highly recommend for any digital project.",
-  avatar: "https://i.pravatar.cc/128?img=48"
-    }
-  ]
 
   const filteredProjects = activeFilter === 'all' 
     ? projects 
@@ -519,48 +498,6 @@ export default function Home() {
                   <CardTitle className="text-lg">{project.title}</CardTitle>
                   <CardDescription>{project.description}</CardDescription>
                 </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="space-y-4">
-              <h2 className="text-3xl md:text-4xl font-bold">Client Testimonials</h2>
-              <div className="w-20 h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded mx-auto"></div>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                What my clients say about working with me
-              </p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="bg-card/50 backdrop-blur-sm border-0">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-                      <AvatarFallback>{testimonial.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-lg">{testimonial.name}</CardTitle>
-                      <CardDescription>{testimonial.role}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground italic">"{testimonial.content}"</p>
-                </CardContent>
               </Card>
             ))}
           </div>
