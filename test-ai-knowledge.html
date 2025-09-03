@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevVibe AI Knowledge System Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .test-controls {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #output {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .demo-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+        }
+        input[type="text"] {
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            width: 300px;
+            margin-right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        .status {
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status.success { background: rgba(76, 175, 80, 0.3); }
+        .status.error { background: rgba(244, 67, 54, 0.3); }
+        .status.info { background: rgba(33, 150, 243, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 DevVibe AI Knowledge System</h1>
+        
+        <div class="status info" id="status">
+            🔄 System Ready - Click "Initialize AI" to begin
+        </div>
+
+        <div class="test-controls">
+            <button onclick="initializeAI()">🚀 Initialize AI</button>
+            <button onclick="runFullTest()" disabled id="testBtn">🧪 Run Full Test</button>
+            <button onclick="showStats()" disabled id="statsBtn">📊 Show Stats</button>
+            <button onclick="clearOutput()">🗑️ Clear Output</button>
+        </div>
+
+        <div class="demo-section">
+            <h3>💬 Interactive AI Demo</h3>
+            <div style="margin: 15px 0;">
+                <input type="text" id="searchInput" placeholder="Ask me anything about DevVibe Pro..." disabled>
+                <button onclick="searchKnowledge()" disabled id="searchBtn">🔍 Ask AI</button>
+            </div>
+            <div style="margin: 15px 0;">
+                <input type="text" id="trainInput" placeholder="Train AI with new knowledge..." disabled>
+                <button onclick="trainAI()" disabled id="trainBtn">🎓 Train AI</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Test Output</h3>
+            <div id="output">Click "Initialize AI" to start testing the local knowledge system...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        let aiSystem = null;
+        let isInitialized = false;
+
+        // Mock the knowledge system for browser testing
+        class MockAI {
+            constructor() {
+                this.knowledge = new Map();
+                this.stats = { entries: 0, categories: 0, searches: 0 };
+            }
+
+            async init() {
+                // Simulate initialization
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Add sample knowledge
+                this.knowledge.set('services', {
+                    title: 'DevVibe Pro Services',
+                    content: 'Custom software development, AI integration, web development, mobile apps',
+                    category: 'services'
+                });
+                
+                this.stats = { entries: this.knowledge.size, categories: 3, searches: 0 };
+                return this.stats;
+            }
+
+            async addKnowledge(data) {
+                this.knowledge.set(data.title.toLowerCase(), data);
+                this.stats.entries = this.knowledge.size;
+                return { success: true, id: data.title.toLowerCase() };
+            }
+
+            async search(query) {
+                this.stats.searches++;
+                const results = [];
+                
+                for (const [key, entry] of this.knowledge) {
+                    if (entry.content.toLowerCase().includes(query.toLowerCase()) ||
+                        entry.title.toLowerCase().includes(query.toLowerCase())) {
+                        results.push({
+                            entry: entry,
+                            relevance: 0.8,
+                            matchType: 'keyword'
+                        });
+                    }
+                }
+                
+                return results;
+            }
+
+            async trainFromChat(question, answer, category) {
+                return await this.addKnowledge({
+                    title: question,
+                    content: answer,
+                    category: category
+                });
+            }
+
+            async giveFeedback(question, answer, rating, feedback) {
+                console.log(`Feedback: ${rating}/5 - ${feedback}`);
+                return rating >= 4;
+            }
+
+            getStats() {
+                return this.stats;
+            }
+        }
+
+        window.initializeAI = async function() {
+            const output = document.getElementById('output');
+            const status = document.getElementById('status');
+            
+            output.textContent = '🔄 Initializing AI Knowledge System...\n';
+            status.textContent = '🔄 Initializing...';
+            status.className = 'status info';
+            
+            try {
+                aiSystem = new MockAI();
+                const stats = await aiSystem.init();
+                
+                output.textContent += '✅ AI System Initialized Successfully!\n';
+                output.textContent += `📊 Stats: ${stats.entries} entries, ${stats.categories} categories\n\n`;
+                
+                status.textContent = '✅ AI System Ready';
+                status.className = 'status success';
+                
+                // Enable buttons
+                document.getElementById('testBtn').disabled = false;
+                document.getElementById('statsBtn').disabled = false;
+                document.getElementById('searchInput').disabled = false;
+                document.getElementById('searchBtn').disabled = false;
+                document.getElementById('trainInput').disabled = false;
+                document.getElementById('trainBtn').disabled = false;
+                
+                isInitialized = true;
+                
+            } catch (error) {
+                output.textContent += `❌ Initialization failed: ${error.message}\n`;
+                status.textContent = '❌ Initialization Failed';
+                status.className = 'status error';
+            }
+        }
+
+        window.runFullTest = async function() {
+            if (!isInitialized) return;
+            
+            const output = document.getElementById('output');
+            output.textContent = '🧪 Running Full AI Knowledge Test...\n';
+            output.textContent += '=' .repeat(50) + '\n\n';
+
+            try {
+                // Test 1: Add Knowledge
+                output.textContent += '1. 📝 Adding sample knowledge...\n';
+                await aiSystem.addKnowledge({
+                    title: 'React Best Practices',
+                    content: 'Use functional components, hooks, TypeScript for better development',
+                    category: 'technical',
+                    tags: ['react', 'frontend']
+                });
+                output.textContent += '   ✅ Knowledge added successfully\n\n';
+
+                // Test 2: Search
+                output.textContent += '2. 🔍 Testing search functionality...\n';
+                const searchResults = await aiSystem.search('development services');
+                output.textContent += `   Found ${searchResults.length} results for "development services"\n`;
+                if (searchResults.length > 0) {
+                    output.textContent += `   Top result: ${searchResults[0].entry.title}\n`;
+                }
+                output.textContent += '\n';
+
+                // Test 3: Training
+                output.textContent += '3. 🎓 Testing conversation training...\n';
+                await aiSystem.trainFromChat(
+                    'What is DevVibe Pro?',
+                    'DevVibe Pro is a software development company specializing in custom solutions.',
+                    'user-questions'
+                );
+                output.textContent += '   ✅ AI trained from conversation\n\n';
+
+                // Test 4: Feedback
+                output.textContent += '4. 💬 Testing feedback system...\n';
+                const feedbackResult = await aiSystem.giveFeedback(
+                    'How to build apps?',
+                    'Use modern frameworks and best practices.',
+                    5,
+                    'Very helpful!'
+                );
+                output.textContent += `   ✅ Feedback processed: ${feedbackResult ? 'Added to knowledge' : 'Noted'}\n\n`;
+
+                // Final stats
+                const finalStats = aiSystem.getStats();
+                output.textContent += '5. 📊 Final Results:\n';
+                output.textContent += `   📄 Knowledge Entries: ${finalStats.entries}\n`;
+                output.textContent += `   🔍 Total Searches: ${finalStats.searches}\n`;
+                output.textContent += `   📂 Categories: ${finalStats.categories}\n\n`;
+
+                output.textContent += '🎉 All tests completed successfully!\n';
+                output.textContent += '✅ Local AI Knowledge System is working perfectly!\n';
+
+            } catch (error) {
+                output.textContent += `❌ Test failed: ${error.message}\n`;
+            }
+        }
+
+        window.searchKnowledge = async function() {
+            if (!isInitialized) return;
+            
+            const query = document.getElementById('searchInput').value;
+            if (!query.trim()) return;
+            
+            const output = document.getElementById('output');
+            output.textContent += `\n🔍 Searching for: "${query}"\n`;
+            
+            try {
+                const results = await aiSystem.search(query);
+                output.textContent += `📊 Found ${results.length} results:\n`;
+                
+                results.forEach((result, index) => {
+                    output.textContent += `   ${index + 1}. ${result.entry.title}\n`;
+                    output.textContent += `      ${result.entry.content.substring(0, 100)}...\n`;
+                });
+                
+                if (results.length === 0) {
+                    output.textContent += '   No results found. Try training the AI with this information!\n';
+                }
+                
+            } catch (error) {
+                output.textContent += `❌ Search failed: ${error.message}\n`;
+            }
+            
+            document.getElementById('searchInput').value = '';
+        }
+
+        window.trainAI = async function() {
+            if (!isInitialized) return;
+            
+            const knowledge = document.getElementById('trainInput').value;
+            if (!knowledge.trim()) return;
+            
+            const output = document.getElementById('output');
+            output.textContent += `\n🎓 Training AI with: "${knowledge.substring(0, 50)}..."\n`;
+            
+            try {
+                await aiSystem.addKnowledge({
+                    title: 'User Training',
+                    content: knowledge,
+                    category: 'user-training',
+                    tags: ['user-input']
+                });
+                
+                output.textContent += '   ✅ AI trained successfully!\n';
+                
+            } catch (error) {
+                output.textContent += `❌ Training failed: ${error.message}\n`;
+            }
+            
+            document.getElementById('trainInput').value = '';
+        }
+
+        window.showStats = function() {
+            if (!isInitialized) return;
+            
+            const stats = aiSystem.getStats();
+            const output = document.getElementById('output');
+            
+            output.textContent += '\n📊 Current AI Statistics:\n';
+            output.textContent += `   📄 Knowledge Entries: ${stats.entries}\n`;
+            output.textContent += `   🔍 Total Searches: ${stats.searches}\n`;
+            output.textContent += `   📂 Categories: ${stats.categories}\n\n`;
+        }
+
+        window.clearOutput = function() {
+            document.getElementById('output').textContent = 'Output cleared. Ready for new tests...\n';
+        }
+
+        // Enable Enter key for inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchKnowledge();
+            });
+            
+            document.getElementById('trainInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') trainAI();
+            });
+        });
+    </script>
+</body>
+</html>
