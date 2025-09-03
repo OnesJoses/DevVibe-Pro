@@ -7,6 +7,7 @@ import {
   extractKeywords 
 } from './ai-utils'
 import { realWebSearch, WebSearchResult } from './real-web-search-hybrid'
+import { localFileKnowledge } from './local-file-knowledge'
 
 /**
  * Smart Knowledge Base - Automatically chooses the best information source
@@ -26,93 +27,179 @@ export class SmartKnowledgeBase {
   async initialize() {
     if (this.isInitialized) return
 
+    // First, try to load from local files
+    try {
+      console.log('🔄 Loading knowledge from local files...')
+      await localFileKnowledge.initialize()
+      
+      // Check if we have local knowledge
+      const localStats = localFileKnowledge.getStats()
+      if (localStats.totalEntries > 0) {
+        console.log(`✅ Loaded ${localStats.totalEntries} entries from local files`)
+        this.isInitialized = true
+        return
+      }
+    } catch (error) {
+      console.log('⚠️ Local file knowledge not available, using built-in knowledge')
+    }
+
+    // Fallback to built-in knowledge if no local files
     const baseKnowledge = [
       {
-        id: 'about-onesmus',
-        title: 'About Onesmus M. - Professional Background',
-        category: 'personal',
-        content: `I'm Onesmus M., a results-driven full-stack developer and digital strategist with 5+ years of experience building scalable web applications. I specialize in transforming business ideas into profitable digital solutions.
-
-**My Expertise:**
-• Full-stack development (React, TypeScript, Node.js, Django)
-• UI/UX design with conversion optimization focus
-• Digital transformation and legacy system modernization
-• Performance optimization and enterprise-grade security
-• Database design (PostgreSQL, MongoDB, Redis)
-• Cloud infrastructure (AWS, Google Cloud, Vercel)
-• DevOps practices (CI/CD, containerization, monitoring)
-
-**Professional Achievements:**
-• Delivered 50+ projects with 98% client satisfaction
-• Consistently meet deadlines and stay within budget
-• Expertise in both startup MVP development and enterprise solutions`
-      },
-      {
-        id: 'technical-skills',
-        title: 'Technical Skills and Expertise',
-        category: 'skills',
-        content: `**Frontend Development:**
-• React.js with TypeScript for scalable components
-• Advanced state management (Redux, Zustand, Context)
-• Next.js for SSR/SSG with optimal SEO
-• Modern CSS (Tailwind, Styled Components, CSS-in-JS)
-• Component libraries (Material-UI, Ant Design, Chakra UI)
-• Progressive Web Apps (PWA) development
-
-**Backend Development:**
-• Node.js with Express.js for RESTful APIs
-• Django and Django REST Framework
-• GraphQL APIs with Apollo Server and Prisma
-• Microservices architecture and API design
-• Real-time applications with WebSockets
-• Serverless functions (Vercel, Netlify, AWS Lambda)
-
-**Database & Storage:**
-• PostgreSQL for complex relational data
-• MongoDB for flexible document storage
-• Redis for caching and session management
-• Prisma ORM for type-safe database access
-• Database optimization and query performance tuning
-
-**Cloud & DevOps:**
-• AWS services (EC2, S3, RDS, Lambda, CloudFront)
-• Google Cloud Platform (Cloud Run, Firestore)
-• Docker containerization and Kubernetes
-• CI/CD pipelines with GitHub Actions
-• Infrastructure as Code with Terraform
-• Monitoring with DataDog and New Relic`
-      },
-      {
-        id: 'services',
-        title: 'Development Services & Solutions',
+        id: 'quick-services',
+        title: 'What Services Do I Offer?',
         category: 'services',
-        content: `**E-commerce Solutions:**
-• Custom online stores with payment integration (Stripe, PayPal, M-Pesa)
-• Inventory management with real-time tracking
-• Multi-vendor marketplaces with vendor dashboards
-• Shopping cart optimization for maximum conversions
-• Mobile-first responsive design
+        content: `**I specialize in building digital solutions that drive business results:**
 
-**Business Applications:**
-• CRM systems for customer relationship management
-• Project management tools with team collaboration
-• HR management with employee self-service portals
-• Financial dashboards with real-time analytics
-• Document management with version control
+🛒 **E-Commerce Stores** - Complete online stores with payment processing
+💼 **Business Apps** - CRM, HR, and management systems 
+🚀 **SaaS Platforms** - Subscription-based software solutions
+🌟 **Professional Websites** - Fast, conversion-focused sites
+💡 **Custom Development** - Tailored solutions for unique needs
 
-**SaaS Platforms:**
-• Multi-tenant architecture with role-based access
-• Subscription billing with automated invoicing
-• API development for third-party integrations
-• White-label solutions for rapid deployment
-• Scalable infrastructure that grows with your business
+**Starting from $2,500** | **2-8 week delivery** | **3 months free support**
 
-**Portfolio & Corporate Websites:**
-• Professional websites that convert visitors to customers
-• SEO-optimized content management systems
-• Blog platforms with advanced content organization
-• Landing pages with A/B testing capabilities
-• Integration with marketing tools and analytics`
+*Need details about a specific service? Just ask!*`
+      },
+      {
+        id: 'project-process',
+        title: 'How Does the Development Process Work?',
+        category: 'process',
+        content: `**Here's exactly what happens when you work with me:**
+
+**Week 1: Discovery & Planning**
+• Free 30-minute discovery call to understand your needs
+• Detailed proposal with fixed pricing (no surprises)
+• Project roadmap and timeline
+
+**Week 2-4: Design & Development**
+• Daily progress updates and demos
+• Your feedback incorporated immediately
+• Regular check-ins to ensure we're on track
+
+**Week 5: Testing & Launch**
+• Thorough testing across all devices
+• Smooth deployment with zero downtime
+• Team training on how to use everything
+
+**After Launch:**
+• 3 months of free support and bug fixes
+• Performance monitoring and optimization
+• Growth recommendations based on usage data
+
+**Payment Options:** 50% upfront, 50% on completion (most popular) or 3-month payment plan for larger projects.`
+      },
+      {
+        id: 'pricing-guide',
+        title: 'How Much Does a Project Cost?',
+        category: 'pricing',
+        content: `**Investment Levels Based on Project Complexity:**
+
+🚀 **Simple Projects: $2,500 - $7,500**
+• Business websites, basic web apps
+• 2-3 weeks delivery
+• Perfect for startups and small businesses
+
+💼 **Business Solutions: $7,500 - $20,000**
+• E-commerce stores, CRM systems, business apps
+• 4-8 weeks delivery
+• Best for established businesses ready to scale
+
+🏢 **Enterprise Solutions: $20,000+**
+• Complex SaaS platforms, large-scale systems
+• 8-16 weeks delivery
+• For businesses requiring advanced features
+
+**What's Included:**
+✅ Unlimited revisions until you're 100% satisfied
+✅ 3 months free support after launch
+✅ Mobile optimization and SEO setup
+✅ Secure hosting and deployment
+
+**Ready to get started?** Schedule a free discovery call to get exact pricing for your project.`
+      },
+      {
+        id: 'project-examples',
+        title: 'Can You Show Me Examples of Your Work?',
+        category: 'portfolio',
+        content: `**Recent Project Results:**
+
+🍕 **Restaurant Online Ordering System**
+• **Result:** 300% increase in monthly revenue
+• **Timeline:** 4 weeks
+• **Features:** Online ordering, delivery tracking, payment processing
+
+🏢 **HR Management System**
+• **Result:** 85% reduction in administrative workload
+• **Timeline:** 6 weeks  
+• **Features:** Employee self-service, automated workflows, reporting
+
+🛒 **E-commerce Platform**
+• **Result:** $0 to $100K monthly sales in 8 months
+• **Timeline:** 5 weeks
+• **Features:** Product catalog, inventory management, social integration
+
+💻 **SaaS Fitness Platform**
+• **Result:** $50K monthly recurring revenue
+• **Timeline:** 8 weeks
+• **Features:** Subscription billing, multi-tenant architecture, mobile app
+
+*Want to see a demo or discuss a similar project? Let's schedule a call!*`
+      },
+      {
+        id: 'technical-questions',
+        title: 'Technical Questions & Answers',
+        category: 'technical',
+        content: `**Common Technical Questions:**
+
+**Q: What technologies do you use?**
+A: React/TypeScript for frontend, Node.js/Python for backend, PostgreSQL/MongoDB for databases, AWS/Vercel for hosting. I choose the best tech stack for your specific needs.
+
+**Q: Will my website be mobile-friendly?**
+A: Absolutely! All projects are mobile-first and work perfectly on all devices. 80% of users browse on mobile, so this is essential.
+
+**Q: How fast will my website load?**
+A: Under 3 seconds guaranteed. I optimize for speed because it directly impacts SEO rankings and conversion rates.
+
+**Q: Can you integrate with my existing systems?**
+A: Yes! I specialize in API integrations with tools like Stripe, PayPal, CRMs, email platforms, and most business software.
+
+**Q: What about security?**
+A: Bank-level security with SSL certificates, encrypted data, secure authentication, and regular security updates.
+
+**Q: Can I make updates myself later?**
+A: Yes! I provide admin panels for content updates, plus training so your team can manage day-to-day changes.`
+      },
+      {
+        id: 'getting-started',
+        title: 'How Do I Get Started?',
+        category: 'process',
+        content: `**Ready to transform your business? Here's how we begin:**
+
+**Step 1: Free Discovery Call (30 minutes)**
+• We discuss your business goals and challenges
+• I'll show you exactly what's possible for your project
+• You'll get a clear understanding of timeline and investment
+• **Schedule:** Usually available within 24 hours
+
+**Step 2: Custom Proposal (2-3 days)**
+• Detailed proposal tailored to your specific needs
+• Fixed pricing with no hidden fees
+• Complete project timeline and milestones
+• **Guarantee:** No surprises, transparent pricing
+
+**Step 3: Project Kickoff**
+• 50% deposit to secure your project slot
+• Detailed planning and requirement gathering
+• UI/UX design concepts and mockups
+• Development begins immediately
+
+**Contact Options:**
+📧 Email for detailed questions
+📞 Phone/video call for immediate discussion
+💬 Live chat for quick questions
+
+**Next Step:** Schedule your free discovery call to discuss your project and get exact pricing.`
       }
     ]
 
@@ -148,6 +235,18 @@ export class SmartKnowledgeBase {
   } = {}): Promise<SearchResult[]> {
     if (!this.isInitialized) await this.initialize()
 
+    // First try local file knowledge
+    try {
+      const localResults = await localFileKnowledge.search(query, options)
+      if (localResults.length > 0) {
+        console.log(`📁 Found ${localResults.length} results in local files`)
+        return localResults
+      }
+    } catch (error) {
+      console.log('⚠️ Local search failed, using built-in knowledge')
+    }
+
+    // Fallback to built-in knowledge
     const { maxResults = 5, threshold = 0.3, category } = options
     const queryEmbedding = this.embedding.createEmbedding(query)
     const queryKeywords = extractKeywords(query)
@@ -160,9 +259,22 @@ export class SmartKnowledgeBase {
       const semanticSimilarity = entry.embedding ? 
         cosineSimilarity(queryEmbedding, entry.embedding) : 0
       const keywordMatch = this.calculateKeywordSimilarity(queryKeywords, entry.keywords)
-      const textSimilarity = 1 - (levenshteinDistance(query.toLowerCase(), entry.content.toLowerCase()) / Math.max(query.length, entry.content.length))
+      
+      // Improved text similarity for shorter queries
+      const queryLen = query.length
+      const contentLen = entry.content.length
+      const maxLen = Math.max(queryLen, Math.min(contentLen, 1000)) // Cap at 1000 chars for comparison
+      const textSimilarity = queryLen < 50 ? 
+        (1 - (levenshteinDistance(query.toLowerCase(), entry.content.toLowerCase().substring(0, 200)) / maxLen)) * 0.5 :
+        1 - (levenshteinDistance(query.toLowerCase(), entry.content.toLowerCase()) / maxLen)
 
-      const relevance = (semanticSimilarity * 0.5) + (keywordMatch * 0.3) + (textSimilarity * 0.2)
+      // Boost relevance if query contains service-related terms and this is a service entry
+      let categoryBoost = 0
+      if (query.toLowerCase().includes('service') && entry.id.includes('service')) {
+        categoryBoost = 0.3
+      }
+
+      const relevance = (semanticSimilarity * 0.5) + (keywordMatch * 0.4) + (textSimilarity * 0.1) + categoryBoost
 
       if (relevance >= threshold) {
         results.push({
@@ -218,7 +330,10 @@ export class SmartKnowledgeBase {
     try {
       // Personal questions → Local knowledge only
       if (analysis.isPersonal) {
-        const localResults = await this.search(query, { maxResults, threshold: 0.2 })
+        console.log('🏠 Using personal knowledge search')
+        const localResults = await this.search(query, { maxResults, threshold: 0.1 }) // Lower threshold
+        console.log(`📊 Local search found ${localResults.length} results:`, localResults.map(r => ({ title: r.entry.title, relevance: r.relevance })))
+        
         finalResults = localResults.map(r => ({
           title: r.entry.title,
           content: r.entry.content,
@@ -334,12 +449,27 @@ export class SmartKnowledgeBase {
   private analyzeQuery(query: string) {
     const q = query.toLowerCase()
     
+    // Focus on actionable questions that add value beyond the website
+    const isPersonal = /\b(services|pricing|cost|price|investment|payment|how much|get started|process|timeline|examples|portfolio|work|projects)\b/i.test(query)
+    const isTechnical = /\b(technical|technology|javascript|react|node|python|django|typescript|database|api|security|development|programming|code|framework|library|how to|tutorial|integration|mobile|seo|performance)\b/i.test(query)
+    const needsCurrentInfo = /\b(latest|new|recent|current|2024|2025|trending|updated|modern|best practices|what's new)\b/i.test(query)
+    const isSpecific = /\b(how to|tutorial|example|guide|implementation|setup|install|configure|deploy|error|problem|issue|demo)\b/i.test(query)
+    const isComparison = /\b(vs|versus|compare|difference|better|best|which|should i)\b/i.test(query)
+    
+    console.log(`🔍 Query analysis for "${query}":`, {
+      isPersonal,
+      isTechnical, 
+      needsCurrentInfo,
+      isSpecific,
+      isComparison
+    })
+    
     return {
-      isPersonal: /\b(about you|your experience|your services|your background|who are you|tell me about|your portfolio|your work|your skills|your expertise)\b/i.test(query),
-      isTechnical: /\b(javascript|react|node|python|django|typescript|database|api|security|development|programming|code|framework|library|how to|tutorial)\b/i.test(query),
-      needsCurrentInfo: /\b(latest|new|recent|current|2024|2025|trending|updated|modern|best practices|what's new)\b/i.test(query),
-      isSpecific: /\b(how to|tutorial|example|guide|implementation|setup|install|configure|deploy|error|problem|issue)\b/i.test(query),
-      isComparison: /\b(vs|versus|compare|difference|better|best|which|should i)\b/i.test(query)
+      isPersonal,
+      isTechnical,
+      needsCurrentInfo,
+      isSpecific,
+      isComparison
     }
   }
 
@@ -349,14 +479,36 @@ export class SmartKnowledgeBase {
   private calculateKeywordSimilarity(queryKeywords: string[], entryKeywords: string[]): number {
     if (queryKeywords.length === 0 || entryKeywords.length === 0) return 0
 
-    const matches = queryKeywords.filter(qk => 
-      entryKeywords.some(ek => 
-        ek.toLowerCase().includes(qk.toLowerCase()) || 
-        qk.toLowerCase().includes(ek.toLowerCase())
-      )
-    )
+    let matches = 0
+    let totalWeight = 0
 
-    return matches.length / Math.max(queryKeywords.length, entryKeywords.length)
+    for (const qk of queryKeywords) {
+      const qkLower = qk.toLowerCase()
+      let bestMatch = 0
+      
+      for (const ek of entryKeywords) {
+        const ekLower = ek.toLowerCase()
+        
+        // Exact match gets highest score
+        if (qkLower === ekLower) {
+          bestMatch = Math.max(bestMatch, 1.0)
+        }
+        // Partial matches
+        else if (ekLower.includes(qkLower) || qkLower.includes(ekLower)) {
+          bestMatch = Math.max(bestMatch, 0.8)
+        }
+        // Service-related keyword boost
+        else if ((qkLower.includes('service') || qkLower.includes('offer')) && 
+                 (ekLower.includes('service') || ekLower.includes('solution') || ekLower.includes('development'))) {
+          bestMatch = Math.max(bestMatch, 0.7)
+        }
+      }
+      
+      matches += bestMatch
+      totalWeight += 1
+    }
+
+    return totalWeight > 0 ? matches / totalWeight : 0
   }
 
   /**

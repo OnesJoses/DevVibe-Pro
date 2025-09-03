@@ -1,0 +1,17 @@
+{
+  "id": "test-entry-1756904601756",
+  "title": "DevVibe Pro Test Entry",
+  "content": "This is a test entry to verify the local knowledge system works.",
+  "category": "business",
+  "keywords": [
+    "test",
+    "verification",
+    "system"
+  ],
+  "createdAt": "2025-09-03T13:03:21.757Z",
+  "updatedAt": "2025-09-03T13:03:21.760Z",
+  "metadata": {
+    "source": "test",
+    "confidence": 1
+  }
+}
