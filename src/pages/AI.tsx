@@ -291,7 +291,26 @@ Feel free to ask more specific questions, and I'll provide detailed, actionable 
   useEffect(() => {
     const initKB = async () => {
       await knowledgeBase.initialize()
-      setStats(knowledgeBase.getStats())
+      const kbStats = knowledgeBase.getStats()
+      setStats(kbStats)
+      
+      // Debug: Check what knowledge is actually loaded
+      console.log('🔍 Knowledge Base Stats:', kbStats)
+      
+      // Test if we can access localStorage knowledge directly
+      const localKnowledge = localStorage.getItem('devvibe-ai-knowledge')
+      if (localKnowledge) {
+        try {
+          const parsed = JSON.parse(localKnowledge)
+          const entries = Array.isArray(parsed) ? parsed : (parsed.entries || [])
+          console.log('📚 Direct localStorage knowledge:', entries.length, 'entries')
+          console.log('📋 Sample entries:', entries.slice(0, 2))
+        } catch (e) {
+          console.error('❌ Error parsing localStorage knowledge:', e)
+        }
+      } else {
+        console.log('⚠️ No knowledge found in localStorage')
+      }
       
       // Test search capabilities
       const testResult = await knowledgeBase.testSearch()

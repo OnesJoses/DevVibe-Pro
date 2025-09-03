@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Sync Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .knowledge-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .sync-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .warning { background: #fff3cd; color: #856404; }
+        .error { background: #f8d7da; color: #721c24; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Knowledge Sync Test</h1>
+        <p>This page tests the sync between the knowledge manager and the main AI system.</p>
+        
+        <button onclick="checkKnowledge()">🔍 Check Current Knowledge</button>
+        <button onclick="addTestKnowledge()">➕ Add Test Knowledge</button>
+        <button onclick="syncToReactFormat()">🔄 Sync to React Format</button>
+        <button onclick="clearAll()">🗑️ Clear All Knowledge</button>
+        
+        <div id="status"></div>
+        <div id="knowledgeDisplay"></div>
+    </div>
+
+    <script>
+        function checkKnowledge() {
+            const status = document.getElementById('status');
+            const display = document.getElementById('knowledgeDisplay');
+            
+            // Check both storage formats
+            const managerData = localStorage.getItem('devvibe-ai-knowledge');
+            const reactData = localStorage.getItem('devvibe-ai-knowledge');
+            
+            let html = '<h3>📊 Current Knowledge State:</h3>';
+            
+            if (managerData) {
+                try {
+                    const parsed = JSON.parse(managerData);
+                    const entries = Array.isArray(parsed) ? parsed : (parsed.entries || []);
+                    html += `<div class="sync-status success">✅ Knowledge Manager: ${entries.length} entries found</div>`;
+                    
+                    // Show first few entries
+                    if (entries.length > 0) {
+                        html += '<h4>📚 Recent Entries:</h4>';
+                        entries.slice(0, 3).forEach(entry => {
+                            html += `
+                                <div class="knowledge-item">
+                                    <strong>${entry.title || 'Untitled'}</strong><br>
+                                    <small>Category: ${entry.category || 'Unknown'}</small><br>
+                                    <p>${(entry.content || '').substring(0, 200)}...</p>
+                                    <small>Created: ${entry.createdAt || 'Unknown'}</small>
+                                </div>
+                            `;
+                        });
+                    }
+                } catch (e) {
+                    html += `<div class="sync-status error">❌ Error parsing knowledge: ${e.message}</div>`;
+                }
+            } else {
+                html += '<div class="sync-status warning">⚠️ No knowledge found in storage</div>';
+            }
+            
+            // Check localStorage size
+            const totalSize = JSON.stringify(localStorage).length;
+            html += `<div class="sync-status">📏 Total localStorage size: ${(totalSize / 1024).toFixed(2)} KB</div>`;
+            
+            display.innerHTML = html;
+        }
+        
+        function addTestKnowledge() {
+            const testEntry = {
+                id: Date.now().toString(),
+                title: "Test Entry from Sync Tool",
+                content: "This is a test entry created by the knowledge sync tool to verify the connection between the knowledge manager and the main AI system.",
+                category: "technical",
+                keywords: ["test", "sync", "verification"],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            // Add to existing knowledge
+            let knowledge = [];
+            const existing = localStorage.getItem('devvibe-ai-knowledge');
+            if (existing) {
+                try {
+                    const parsed = JSON.parse(existing);
+                    knowledge = Array.isArray(parsed) ? parsed : (parsed.entries || []);
+                } catch (e) {
+                    console.error('Error parsing existing knowledge:', e);
+                }
+            }
+            
+            knowledge.push(testEntry);
+            localStorage.setItem('devvibe-ai-knowledge', JSON.stringify(knowledge));
+            
+            document.getElementById('status').innerHTML = 
+                '<div class="sync-status success">✅ Test knowledge added successfully!</div>';
+                
+            checkKnowledge();
+        }
+        
+        function syncToReactFormat() {
+            try {
+                const knowledge = localStorage.getItem('devvibe-ai-knowledge');
+                if (!knowledge) {
+                    document.getElementById('status').innerHTML = 
+                        '<div class="sync-status warning">⚠️ No knowledge to sync</div>';
+                    return;
+                }
+                
+                const parsed = JSON.parse(knowledge);
+                const entries = Array.isArray(parsed) ? parsed : (parsed.entries || []);
+                
+                // Convert to React app format if needed
+                const reactFormat = {
+                    entries: entries.map(entry => ({
+                        ...entry,
+                        embedding: null // Will be generated by React app
+                    })),
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                // Store in React format (same key for now)
+                localStorage.setItem('devvibe-ai-knowledge', JSON.stringify(entries));
+                
+                document.getElementById('status').innerHTML = 
+                    `<div class="sync-status success">✅ Synced ${entries.length} entries to React format!</div>`;
+                    
+                // Also store training data
+                const conversations = localStorage.getItem('devvibe-conversations');
+                if (conversations) {
+                    const convData = JSON.parse(conversations);
+                    localStorage.setItem('devvibe-ai-training', JSON.stringify({
+                        conversations: convData,
+                        lastUpdated: new Date().toISOString()
+                    }));
+                    
+                    document.getElementById('status').innerHTML += 
+                        `<div class="sync-status success">✅ Also synced conversation data!</div>`;
+                }
+                
+            } catch (e) {
+                document.getElementById('status').innerHTML = 
+                    `<div class="sync-status error">❌ Sync error: ${e.message}</div>`;
+            }
+        }
+        
+        function clearAll() {
+            if (confirm('Are you sure you want to clear ALL knowledge? This cannot be undone!')) {
+                localStorage.removeItem('devvibe-ai-knowledge');
+                localStorage.removeItem('devvibe-conversations');
+                localStorage.removeItem('devvibe-pending-feedback');
+                localStorage.removeItem('devvibe-ai-training');
+                
+                document.getElementById('status').innerHTML = 
+                    '<div class="sync-status warning">⚠️ All knowledge cleared!</div>';
+                document.getElementById('knowledgeDisplay').innerHTML = '';
+            }
+        }
+        
+        // Auto-check on load
+        window.addEventListener('load', checkKnowledge);
+    </script>
+</body>
+</html>
