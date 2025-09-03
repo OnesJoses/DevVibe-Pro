@@ -1,50 +1,88 @@
 import { useMemo, useState, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Link } from 'react-router-dom'
-import { Search, Code, Globe, Palette, BookOpen, HelpCircle, Lightbulb, Brain, Zap, TrendingUp } from 'lucide-react'
-import { EnhancedLocalKnowledgeBase } from '@/lib/enhanced-knowledge-base'
+import { Search, Code, Globe, Palette, BookOpen, HelpCircle, Lightbulb, Brain, Zap, TrendingUp, Wifi, WifiOff } from 'lucide-react'
+import { smartKnowledgeBase } from '@/lib/smart-knowledge-base'
 
-// Initialize the enhanced knowledge base
-const knowledgeBase = new EnhancedLocalKnowledgeBase()
+// Initialize the smart knowledge base
+const knowledgeBase = smartKnowledgeBase
 
 export default function AIPage() {
   const [input, setInput] = useState('')
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string; title?: string; relevance?: number; matchType?: string; matchedTerms?: string[] }[]>([
+  const [messages, setMessages] = useState<{ 
+    role: 'user' | 'assistant'; 
+    content: string; 
+    title?: string; 
+    relevance?: number; 
+    matchType?: string; 
+    matchedTerms?: string[];
+    metadata?: any;
+  }[]>([
     { 
       role: 'assistant', 
-      title: 'Enhanced AI Assistant with Web Search! 🧠🌐',
-      content: `Welcome! I'm your intelligent project guide powered by advanced local AI with **web search capabilities**. I can provide detailed answers from both my comprehensive knowledge base and real-time web searches.
+      title: 'Intelligent AI Project Assistant 🧠✨',
+      content: `Welcome! I'm your intelligent project guide with comprehensive knowledge and smart information retrieval.
 
-**🚀 Enhanced Capabilities:**
-• **Semantic Understanding** - I understand context and meaning, not just keywords
-• **Local Knowledge Base** - Deep expertise about my services, tech stack, and processes
-• **Web Search Integration** - Real-time information from the internet when needed
-• **Smart Routing** - Automatically chooses local vs web search for optimal results
-• **Multiple Sources** - Privacy-focused search via DuckDuckGo and SearXNG
+**🚀 What I Can Help With:**
+- **Personal Questions** - Instant answers about my services, experience, and approach  
+- **Technical Guidance** - Detailed explanations on development topics and best practices
+- **Current Information** - Up-to-date insights on technology trends and solutions
+- **Project Planning** - Strategic advice for your development needs
+
+**🎯 Smart Features:**
+- **Intelligent Routing** - Automatically finds the best information source for your question
+- **Comprehensive Answers** - Combines expertise with current data for complete responses
+- **Source Transparency** - Shows exactly where information comes from
+- **Contextual Responses** - Tailored answers based on your specific needs
+- **Smart Routing** - Automatically chooses the best information source
+- **Hybrid Intelligence** - Combines personal knowledge with curated tech data
+- **Source Transparency** - Shows exactly where information comes from
+
+**🔍 Search Features:**
+- **Immediate Responses** for business and service questions
+- **Curated Tech Resources** for common development topics
+- **Structured Fallbacks** for reliable information
+- **Privacy-Focused** - no tracking or external API dependencies
+- **Always Available** - works without internet connectivity
 
 **💡 Try These Queries:**
-• **Local Expertise**: "What services do you offer?" "Your development process?"
-• **Web Search**: "Latest React 18 features" "Best practices for Node.js security"
-• **Hybrid**: "How do you implement modern authentication?" "Current web development trends"
+- **Personal**: "What services do you offer?" "Your development process?"
+- **Tech Topics**: "React best practices" "TypeScript fundamentals"
+- **Project Info**: "How much does a custom web app cost?" "Your tech stack?"
+- **Hybrid**: "How do you approach React development?" "Your experience with TypeScript"
 
-**🔍 Search Strategy:**
-- **Personal/Business questions** → Local knowledge base (instant, detailed)
-- **Technical/General queries** → Web search (current, comprehensive) 
-- **Hybrid approach** → Best of both sources
+**🎯 Search Intelligence:**
+- Personal/business questions → Local expertise (instant, comprehensive)
+- Technical topics → Curated resources (reliable, structured)
+- Hybrid queries → Best of both sources
 
-What would you like to explore?`
+Ready to search both my expertise AND the entire internet? Ask me anything!`
     }
   ])
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<any>(null)
+  const [webSearchStatus, setWebSearchStatus] = useState<any>(null)
 
-  // Initialize knowledge base on component mount
+  // Initialize knowledge base and test web search on component mount
   useEffect(() => {
     const initKB = async () => {
       await knowledgeBase.initialize()
       setStats(knowledgeBase.getStats())
+      
+      // Test search capabilities
+      const testResult = await knowledgeBase.testSearch()
+      const providers = await knowledgeBase.getSearchProviders()
+      
+      setWebSearchStatus({
+        ...testResult,
+        providers
+      })
+      
+      console.log('🌐 Web Search Status:', { testResult, providers })
     }
     initKB()
   }, [])
@@ -59,65 +97,51 @@ What would you like to explore?`
     setLoading(true)
 
     try {
-      // Use enhanced smart search with web search integration
-      const searchResult = await knowledgeBase.smartSearch(query, { 
-        maxResults: 1, 
-        threshold: 0.2, 
-        includeWebSearch: true 
-      })
+      // Use the smart search system that automatically chooses the best approach
+      const searchResult = await knowledgeBase.smartSearch(query, 5)
       
-      let response
-      if (searchResult.localResults.length > 0 && searchResult.searchStrategy !== 'web-only') {
-        // Use local knowledge base result
-        const bestResult = searchResult.localResults[0]
-        const strategyBadge = searchResult.searchStrategy === 'hybrid' 
-          ? ' + Web Search' 
-          : ''
-        
-        response = {
-          role: 'assistant' as const,
-          title: `${bestResult.entry.title} (${Math.round(bestResult.relevance * 100)}% match${strategyBadge})`,
-          content: searchResult.response,
-          relevance: bestResult.relevance,
-          matchType: bestResult.matchType,
-          matchedTerms: bestResult.matchedTerms
-        }
-      } else if (searchResult.webResults && searchResult.webResults.length > 0) {
-        // Use web search results
-        response = {
-          role: 'assistant' as const,
-          title: `Web Search Results (${searchResult.webResults.length} sources found)`,
-          content: searchResult.response,
-          relevance: 0.8,
-          matchType: 'web-search',
-          matchedTerms: ['web', 'search', 'external']
-        }
-      } else {
-        // Use fallback response
-        const fallback = knowledgeBase.getFallbackResponse()
-        response = {
-          role: 'assistant' as const,
-          title: fallback.entry.title,
-          content: searchResult.response,
-          relevance: fallback.relevance,
-          matchType: fallback.matchType,
-          matchedTerms: fallback.matchedTerms
+      console.log('🔍 Smart search result:', searchResult)
+      
+      // Create response message
+      const response = {
+        role: 'assistant' as const,
+        title: `${searchResult.strategy} • ${searchResult.results.length} results`,
+        content: searchResult.results.length > 0 ? 
+          searchResult.results.map(result => {
+            let content = `**${result.title}**\n\n${result.content}`
+            if (result.url) {
+              content += `\n\n*Source: ${result.url}*`
+            }
+            return content
+          }).join('\n\n---\n\n') :
+          `I'd be happy to help with "${query}". Could you provide more context or try rephrasing your question?`,
+        relevance: searchResult.results[0]?.relevance || 0,
+        matchType: searchResult.strategy,
+        matchedTerms: searchResult.sources,
+        metadata: {
+          strategy: searchResult.strategy,
+          sources: searchResult.sources,
+          searchTime: searchResult.searchTime,
+          resultCount: searchResult.results.length
         }
       }
 
-      // Simulate brief processing time for better UX
+      // Show results after a brief delay for better UX
       setTimeout(() => {
         setMessages(prev => [...prev, response])
         setStats(knowledgeBase.getStats())
         setLoading(false)
-      }, 1200) // Slightly longer for web search
+      }, Math.min(1500, searchResult.searchTime + 500))
 
     } catch (error) {
-      console.error('Search error:', error)
+      console.error('❌ Search error:', error)
       setMessages(prev => [...prev, {
         role: 'assistant',
         title: 'Search Error',
-        content: 'I encountered an issue processing your question. This might be due to network connectivity for web search. Please try again or ask about my services, tech stack, or pricing for local information.'
+        content: 'I encountered an issue processing your question. This might be due to network connectivity. Please try again or ask about my services and expertise for local information.',
+        relevance: 0,
+        matchType: 'error',
+        matchedTerms: ['error']
       }])
       setLoading(false)
     }
@@ -152,7 +176,21 @@ What would you like to explore?`
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
               </div>
               <div>
-                <CardTitle className="text-xl font-bold">Enhanced AI Project Assistant</CardTitle>
+                <CardTitle className="text-xl font-bold flex items-center gap-2">
+                  Enhanced AI Project Assistant
+                  {webSearchStatus && (
+                    <Badge 
+                      variant={webSearchStatus.success ? "secondary" : "destructive"}
+                      className="text-xs bg-white/20 text-white border-white/30"
+                    >
+                      {webSearchStatus.success ? (
+                        <><Wifi className="h-3 w-3 mr-1" />Web Search Ready</>
+                      ) : (
+                        <><WifiOff className="h-3 w-3 mr-1" />Local Only</>
+                      )}
+                    </Badge>
+                  )}
+                </CardTitle>
                 <CardDescription className="text-blue-100">
                   Powered by advanced semantic search • {stats?.totalEntries || 0} knowledge entries • {stats?.totalQueries || 0} queries processed
                 </CardDescription>
@@ -182,18 +220,59 @@ What would you like to explore?`
                       : 'bg-white border border-slate-200 shadow-sm'
                   }`}>
                     {message.title && (
-                      <div className="font-semibold text-blue-600 mb-3 flex items-center gap-2">
+                      <div className="font-semibold text-blue-600 mb-3 flex items-center gap-2 flex-wrap">
                         <Lightbulb className="h-4 w-4" />
                         {message.title}
                         {message.relevance && (
                           <Badge variant="secondary" className="ml-2 text-xs">
-                            {message.matchType} match
+                            {message.matchType} • {Math.round(message.relevance * 100)}%
+                          </Badge>
+                        )}
+                        {message.metadata?.searchStrategy && (
+                          <Badge 
+                            variant={
+                              message.metadata.searchStrategy === 'web-only' ? 'default' :
+                              message.metadata.searchStrategy === 'local-only' ? 'secondary' :
+                              message.metadata.searchStrategy === 'hybrid' ? 'outline' : 'destructive'
+                            }
+                            className="text-xs"
+                          >
+                            {message.metadata.searchStrategy === 'web-only' && <><Wifi className="h-3 w-3 mr-1" />Web Search</>}
+                            {message.metadata.searchStrategy === 'local-only' && <><Brain className="h-3 w-3 mr-1" />Local Knowledge</>}
+                            {message.metadata.searchStrategy === 'hybrid' && <><Zap className="h-3 w-3 mr-1" />Hybrid Search</>}
+                            {message.metadata.searchStrategy === 'error' && <><WifiOff className="h-3 w-3 mr-1" />Error</>}
                           </Badge>
                         )}
                       </div>
                     )}
-                    <div className="whitespace-pre-line text-sm leading-relaxed">
-                      {message.content}
+                    <div className="text-sm leading-relaxed markdown-render">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          a: (props: any) => (
+                            <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline" />
+                          ),
+                          strong: (props: any) => <strong className="font-semibold" {...props} />,
+                          em: (props: any) => <em className="italic" {...props} />,
+                          ul: (props: any) => <ul className="list-disc pl-5 my-2" {...props} />,
+                          ol: (props: any) => <ol className="list-decimal pl-5 my-2" {...props} />,
+                          li: (props: any) => <li className="mb-1" {...props} />,
+                          code: (props: any) => {
+                            const { inline, children, ...rest } = props || {}
+                            return (
+                              <code className={`bg-slate-100 rounded px-1 ${inline ? '' : 'block p-2 my-2'}`} {...rest}>
+                                {children}
+                              </code>
+                            )
+                          },
+                          h1: (props: any) => <h1 className="text-lg font-semibold mt-2 mb-1" {...props} />,
+                          h2: (props: any) => <h2 className="text-base font-semibold mt-2 mb-1" {...props} />,
+                          h3: (props: any) => <h3 className="text-sm font-semibold mt-2 mb-1" {...props} />,
+                          hr: (props: any) => <hr className="my-3 border-slate-200" {...props} />
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
                     </div>
                     {message.matchedTerms && message.matchedTerms.length > 0 && (
                       <div className="mt-3 pt-2 border-t border-slate-100">
@@ -205,6 +284,30 @@ What would you like to explore?`
                             </Badge>
                           ))}
                         </div>
+                      </div>
+                    )}
+                    {message.metadata && (
+                      <div className="mt-3 pt-2 border-t border-slate-100 space-y-1">
+                        {message.metadata.searchTime && (
+                          <div className="text-xs text-slate-500">
+                            ⚡ Search completed in {message.metadata.searchTime}ms
+                          </div>
+                        )}
+                        {message.metadata.webProvider && (
+                          <div className="text-xs text-slate-500">
+                            🌐 Web search via {message.metadata.webProvider}
+                          </div>
+                        )}
+                        {message.metadata.totalResults && (
+                          <div className="text-xs text-slate-500">
+                            📊 {message.metadata.totalResults} total results found
+                          </div>
+                        )}
+                        {message.metadata.reasoning && (
+                          <div className="text-xs text-slate-400 italic">
+                            🧠 {message.metadata.reasoning}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -311,7 +414,7 @@ What would you like to explore?`
             <div className="flex justify-between items-center pt-4 border-t border-slate-200">
               <div className="text-xs text-slate-500 flex items-center gap-2">
                 <Brain className="h-4 w-4" />
-                Enhanced local AI • Semantic search • No external APIs • Privacy-focused
+                Enhanced local AI • Semantic search • Privacy-focused
               </div>
               <Link 
                 to="/" 

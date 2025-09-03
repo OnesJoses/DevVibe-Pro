@@ -6,21 +6,19 @@ import {
   levenshteinDistance, 
   extractKeywords 
 } from './ai-utils'
-import { EnhancedWebSearch, WebSearchResult, shouldUseWebSearch, formatSearchResults } from './web-search'
+import { enhancedWebSearch, WebSearchResult } from './enhanced-web-search'
 
 /**
- * Enhanced Local Knowledge Base with semantic search capabilities and web search integration
- * Runs entirely in the browser with optional web search fallback
+ * Enhanced Local Knowledge Base with REAL web search integration
+ * Combines comprehensive local knowledge with actual internet search capabilities
  */
 export class EnhancedLocalKnowledgeBase {
   private entries: KnowledgeEntry[] = []
   private embedding: LocalTextEmbedding
-  private webSearch: EnhancedWebSearch
   private isInitialized = false
 
   constructor() {
     this.embedding = new LocalTextEmbedding()
-    this.webSearch = new EnhancedWebSearch()
   }
 
   /**
@@ -605,83 +603,195 @@ I specialize in projects where technical excellence meets business strategy. Let
   }
 
   /**
-   * Smart search that combines local knowledge with web search
+   * REAL intelligent search that combines local knowledge with actual web search
    */
-  async smartSearch(query: string, options = { maxResults: 3, threshold: 0.3, includeWebSearch: true }): Promise<{
+  async intelligentSearch(query: string, options = { 
+    maxResults: 3, 
+    threshold: 0.3, 
+    forceWebSearch: false,
+    forceLocal: false 
+  }): Promise<{
     localResults: SearchResult[]
-    webResults?: WebSearchResult[]
-    searchStrategy: 'local-only' | 'web-only' | 'hybrid'
+    webResults: WebSearchResult[]
+    searchStrategy: 'local-only' | 'web-only' | 'hybrid' | 'error'
     response: string
+    metadata: {
+      queryAnalysis: any
+      searchTime: number
+      webProvider: string | null
+      totalResults: number
+    }
   }> {
-    // First, try local search
-    const localResults = await this.search(query, options)
+    const startTime = Date.now()
+    console.log(`🧠 Starting intelligent search for: "${query}"`)
 
-    // Determine search strategy
-    const useWebSearch = options.includeWebSearch && shouldUseWebSearch(query)
-    const hasGoodLocalResults = localResults.length > 0 && localResults[0].relevance > 0.6
+    // Analyze the query to determine search strategy
+    const analysis = this.queryAnalyzer.analyzeQuery(query)
+    const strategy = this.queryAnalyzer.getSearchStrategy(query)
+    
+    console.log(`📊 Query analysis:`, analysis)
+    console.log(`🎯 Search strategy:`, strategy)
 
-    if (!useWebSearch || hasGoodLocalResults) {
-      // Use local results only
-      const response = localResults.length > 0 
-        ? this.formatLocalResults(localResults)
-        : this.getFallbackResponse().entry.content
+    let localResults: SearchResult[] = []
+    let webResults: WebSearchResult[] = []
+    let webProvider: string | null = null
+    let searchStrategy: 'local-only' | 'web-only' | 'hybrid' | 'error' = 'hybrid'
+
+    try {
+      // Get local results if needed
+      if ((analysis.useLocalKnowledge || options.forceLocal) && !options.forceWebSearch) {
+        console.log(`📚 Searching local knowledge base...`)
+        localResults = await this.search(query, { 
+          maxResults: strategy.maxLocalResults, 
+          threshold: options.threshold 
+        })
+        console.log(`📚 Local search found ${localResults.length} results`)
+      }
+
+      // Get web results if needed
+      if ((analysis.useWebSearch || options.forceWebSearch) && !options.forceLocal) {
+        console.log(`🌐 Performing real web search...`)
+        const webSearchResult = await this.webSearchEngine.search(query, strategy.maxWebResults)
+        
+        if (webSearchResult.success && webSearchResult.results.length > 0) {
+          webResults = webSearchResult.results
+          webProvider = webSearchResult.provider
+          console.log(`🌐 Web search successful via ${webProvider}: ${webResults.length} results`)
+        } else {
+          console.log(`❌ Web search failed: ${webSearchResult.provider}`)
+        }
+      }
+
+      // Determine final search strategy
+      if (localResults.length > 0 && webResults.length > 0) {
+        searchStrategy = 'hybrid'
+      } else if (localResults.length > 0) {
+        searchStrategy = 'local-only'
+      } else if (webResults.length > 0) {
+        searchStrategy = 'web-only'
+      } else {
+        searchStrategy = 'error'
+      }
+
+      // Generate response
+      const response = this.generateIntelligentResponse(
+        query, 
+        localResults, 
+        webResults, 
+        searchStrategy,
+        analysis
+      )
+
+      const searchTime = Date.now() - startTime
+      console.log(`✅ Intelligent search completed in ${searchTime}ms: ${searchStrategy}`)
 
       return {
         localResults,
-        searchStrategy: 'local-only',
-        response
-      }
-    }
-
-    // Use web search for general information queries
-    try {
-      const webResults = await this.webSearch.search(query, 3)
-      
-      if (webResults.length > 0) {
-        const response = formatSearchResults(webResults)
-        
-        return {
-          localResults,
-          webResults,
-          searchStrategy: localResults.length > 0 ? 'hybrid' : 'web-only',
-          response
+        webResults,
+        searchStrategy,
+        response,
+        metadata: {
+          queryAnalysis: analysis,
+          searchTime,
+          webProvider,
+          totalResults: localResults.length + webResults.length
         }
       }
+
     } catch (error) {
-      console.warn('Web search failed, falling back to local results:', error)
-    }
-
-    // Fallback to local results or default response
-    const response = localResults.length > 0 
-      ? this.formatLocalResults(localResults)
-      : this.getFallbackResponse().entry.content
-
-    return {
-      localResults,
-      searchStrategy: 'local-only',
-      response
+      console.error('❌ Intelligent search error:', error)
+      
+      return {
+        localResults: [],
+        webResults: [],
+        searchStrategy: 'error',
+        response: `I apologize, but I encountered an error while searching for "${query}". Please try rephrasing your question or ask me about my services directly.`,
+        metadata: {
+          queryAnalysis: analysis,
+          searchTime: Date.now() - startTime,
+          webProvider: null,
+          totalResults: 0
+        }
+      }
     }
   }
 
   /**
-   * Format local search results for display
+   * Generate intelligent response combining local and web results
    */
-  private formatLocalResults(results: SearchResult[]): string {
-    if (results.length === 0) return this.getFallbackResponse().entry.content
+  private generateIntelligentResponse(
+    query: string,
+    localResults: SearchResult[],
+    webResults: WebSearchResult[],
+    strategy: string,
+    analysis: any
+  ): string {
+    let response = ''
 
-    const primaryResult = results[0]
-    let response = primaryResult.entry.content
+    // Local knowledge response
+    if (localResults.length > 0) {
+      const bestLocal = localResults[0]
+      response += `**From my expertise:**\n\n${bestLocal.entry.content}\n\n`
+      
+      if (localResults.length > 1) {
+        response += `**Additional relevant information:**\n`
+        localResults.slice(1).forEach((result, index) => {
+          const snippet = result.entry.content.substring(0, 200) + '...'
+          response += `• **${result.entry.title}**: ${snippet}\n`
+        })
+        response += '\n'
+      }
+    }
 
-    // Add context about match quality
-    if (results.length > 1) {
-      response += `\n\n**Related Information:**`
-      results.slice(1).forEach((result, index) => {
-        const snippet = result.entry.content.substring(0, 150) + '...'
-        response += `\n${index + 2}. **${result.entry.title}**: ${snippet}`
+    // Web search results
+    if (webResults.length > 0) {
+      if (localResults.length > 0) {
+        response += `**Latest information from the web:**\n\n`
+      } else {
+        response += `**Here's what I found online:**\n\n`
+      }
+
+      webResults.forEach((result, index) => {
+        response += `**${index + 1}. ${result.title}**\n`
+        response += `${result.snippet}\n`
+        response += `🔗 [${result.displayUrl}](${result.url})\n\n`
       })
     }
 
+    // Add helpful context based on strategy
+    if (strategy === 'local-only') {
+      response += `💡 *This information is from my personal knowledge and experience. For the latest updates, feel free to ask me to search the web!*`
+    } else if (strategy === 'web-only') {
+      response += `💡 *This information is from current web search results. For questions about my services and expertise, just ask directly!*`
+    } else if (strategy === 'hybrid') {
+      response += `💡 *This combines my personal expertise with current web information for a comprehensive answer.*`
+    }
+
+    // Fallback if no results
+    if (localResults.length === 0 && webResults.length === 0) {
+      response = this.getFallbackResponse().entry.content
+    }
+
     return response
+  }
+
+  /**
+   * Test the web search functionality
+   */
+  async testWebSearch(): Promise<{
+    success: boolean
+    provider: string
+    results: number
+    error?: string
+  }> {
+    return await this.webSearchEngine.testSearch()
+  }
+
+  /**
+   * Get available search providers
+   */
+  async getSearchProviders(): Promise<{ name: string; available: boolean }[]> {
+    return await this.webSearchEngine.getAvailableProviders()
   }
 
   /**
