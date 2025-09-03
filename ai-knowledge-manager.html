@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Knowledge Manager</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+        .knowledge-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .category-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-right: 10px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin: 8px 0;
+            box-sizing: border-box;
+        }
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .feedback-buttons {
+            margin: 10px 0;
+        }
+        .feedback-buttons button {
+            margin: 2px;
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+        .satisfied { background: linear-gradient(45deg, #4CAF50, #45a049); }
+        .unsatisfied { background: linear-gradient(45deg, #f44336, #da190b); }
+        .chat-message {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+        .ai-response {
+            border-left-color: #4CAF50;
+        }
+        .learning-notification {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+        .stat-item {
+            flex: 1;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Knowledge Manager</h1>
+        <p>Manage your local AI knowledge base. All data is stored on your computer!</p>
+        
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalEntries">0</div>
+                <div>Total Knowledge</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="categories">0</div>
+                <div>Categories</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="lastAdded">Never</div>
+                <div>Last Added</div>
+            </div>
+        </div>
+        <div class="stats" id="conversationStats">
+            <!-- Conversation stats will be added here -->
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📚 Current Knowledge</h2>
+        <button onclick="loadKnowledge()">🔄 Refresh Knowledge</button>
+        <div id="knowledgeList">Click "Refresh Knowledge" to see what your AI has learned...</div>
+    </div>
+
+    <div class="container">
+        <h2>➕ Add New Knowledge</h2>
+        <div>
+            <input type="text" id="title" placeholder="Knowledge Title (e.g., 'Our Pricing Plans')" />
+            <textarea id="content" rows="4" placeholder="Knowledge Content (e.g., 'Our basic plan starts at $99/month...')"></textarea>
+            <select id="category">
+                <option value="business">Business</option>
+                <option value="services">Services</option>
+                <option value="technical">Technical</option>
+                <option value="projects">Projects</option>
+                <option value="user-questions">User Questions</option>
+            </select>
+            <input type="text" id="keywords" placeholder="Keywords (comma-separated, e.g., pricing, plans, cost)" />
+            <button onclick="addKnowledge()">💾 Add Knowledge</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🎓 Train from Conversation</h2>
+        <div>
+            <input type="text" id="question" placeholder="User Question (e.g., 'What services do you offer?')" />
+            <textarea id="answer" rows="3" placeholder="Good Answer (e.g., 'We offer web development, mobile apps, and AI integration')"></textarea>
+            <button onclick="trainFromChat()">📖 Train AI</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🤖 Interactive AI Chat</h2>
+        <div>
+            <input type="text" id="userQuestion" placeholder="Ask your AI anything..." />
+            <button onclick="askAI()">💬 Ask AI</button>
+            <div id="chatHistory"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🔍 Test Search</h2>
+        <div>
+            <input type="text" id="searchQuery" placeholder="Search your knowledge (e.g., 'pricing', 'services')" />
+            <button onclick="searchKnowledge()">🔎 Search</button>
+            <div id="searchResults"></div>
+        </div>
+    </div>
+
+    <script>
+        // Mock localStorage-based knowledge system for browser
+        class LocalKnowledgeManager {
+            constructor() {
+                this.storageKey = 'devvibe-ai-knowledge';
+                this.conversationKey = 'devvibe-conversations';
+                this.pendingFeedbackKey = 'devvibe-pending-feedback';
+            }
+
+            getKnowledge() {
+                const stored = localStorage.getItem(this.storageKey);
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            saveKnowledge(knowledge) {
+                localStorage.setItem(this.storageKey, JSON.stringify(knowledge));
+            }
+
+            getConversations() {
+                const stored = localStorage.getItem(this.conversationKey);
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            saveConversations(conversations) {
+                localStorage.setItem(this.conversationKey, JSON.stringify(conversations));
+            }
+
+            getPendingFeedback() {
+                const stored = localStorage.getItem(this.pendingFeedbackKey);
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            savePendingFeedback(pending) {
+                localStorage.setItem(this.pendingFeedbackKey, JSON.stringify(pending));
+            }
+
+            addEntry(entry) {
+                const knowledge = this.getKnowledge();
+                const newEntry = {
+                    id: Date.now().toString(),
+                    ...entry,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                knowledge.push(newEntry);
+                this.saveKnowledge(knowledge);
+                return newEntry;
+            }
+
+            // Enhanced search with similarity scoring
+            search(query) {
+                const knowledge = this.getKnowledge();
+                const queryLower = query.toLowerCase();
+                const queryWords = queryLower.split(' ').filter(w => w.length > 2);
+                
+                return knowledge
+                    .map(entry => {
+                        let score = 0;
+                        const titleLower = entry.title.toLowerCase();
+                        const contentLower = entry.content.toLowerCase();
+                        
+                        // Exact phrase match (highest score)
+                        if (titleLower.includes(queryLower) || contentLower.includes(queryLower)) {
+                            score += 10;
+                        }
+                        
+                        // Individual word matches
+                        queryWords.forEach(word => {
+                            if (titleLower.includes(word)) score += 3;
+                            if (contentLower.includes(word)) score += 2;
+                            if (entry.keywords && entry.keywords.some(k => k.toLowerCase().includes(word))) score += 4;
+                        });
+                        
+                        return { ...entry, score };
+                    })
+                    .filter(entry => entry.score > 0)
+                    .sort((a, b) => b.score - a.score);
+            }
+
+            // Smart AI response generation
+            generateResponse(question) {
+                const searchResults = this.search(question);
+                
+                if (searchResults.length > 0) {
+                    const bestMatch = searchResults[0];
+                    
+                    // If it's a direct knowledge entry, return it
+                    if (bestMatch.score >= 5) {
+                        return {
+                            answer: bestMatch.content,
+                            confidence: 'high',
+                            source: 'learned_knowledge',
+                            sourceTitle: bestMatch.title
+                        };
+                    }
+                }
+                
+                // Generate a generic helpful response
+                return {
+                    answer: this.generateGenericResponse(question),
+                    confidence: 'medium',
+                    source: 'generated'
+                };
+            }
+
+            generateGenericResponse(question) {
+                const questionLower = question.toLowerCase();
+                
+                if (questionLower.includes('price') || questionLower.includes('cost')) {
+                    return "I'd be happy to discuss pricing with you! Our solutions are customized based on your specific needs. Could you tell me more about what you're looking for?";
+                }
+                
+                if (questionLower.includes('service') || questionLower.includes('offer')) {
+                    return "We offer a range of professional services including custom development, consulting, and technical solutions. What specific area are you interested in?";
+                }
+                
+                if (questionLower.includes('time') || questionLower.includes('how long')) {
+                    return "Project timelines vary based on scope and complexity. Most projects range from 2-8 weeks. I'd be happy to provide a more specific estimate based on your requirements.";
+                }
+                
+                if (questionLower.includes('contact') || questionLower.includes('reach')) {
+                    return "You can reach out to us through this platform, and we'll be happy to discuss your project in detail!";
+                }
+                
+                return "That's a great question! I'd love to help you with that. Could you provide a bit more detail so I can give you the most accurate information?";
+            }
+
+            // Record conversation for learning
+            recordConversation(question, answer, source) {
+                const conversations = this.getConversations();
+                const conversation = {
+                    id: Date.now().toString(),
+                    question,
+                    answer,
+                    source,
+                    timestamp: new Date().toISOString(),
+                    feedback: null
+                };
+                conversations.push(conversation);
+                this.saveConversations(conversations);
+                return conversation;
+            }
+
+            // Process user feedback
+            processFeedback(conversationId, rating, comments) {
+                const conversations = this.getConversations();
+                const conversation = conversations.find(c => c.id === conversationId);
+                
+                if (conversation) {
+                    conversation.feedback = { rating, comments, timestamp: new Date().toISOString() };
+                    this.saveConversations(conversations);
+                    
+                    // If rating is 4 or 5, automatically add to knowledge base
+                    if (rating >= 4) {
+                        this.learnFromGoodResponse(conversation);
+                        return true; // Learned
+                    }
+                }
+                return false; // Not learned
+            }
+
+            learnFromGoodResponse(conversation) {
+                const knowledge = this.getKnowledge();
+                
+                // Check if similar knowledge already exists
+                const existing = knowledge.find(k => 
+                    k.title.toLowerCase().includes(conversation.question.toLowerCase().substring(0, 20)) ||
+                    k.content.toLowerCase().includes(conversation.answer.toLowerCase().substring(0, 30))
+                );
+                
+                if (!existing) {
+                    // Add new knowledge entry
+                    this.addEntry({
+                        title: conversation.question,
+                        content: conversation.answer,
+                        category: 'user-questions',
+                        keywords: conversation.question.toLowerCase().split(' ').filter(w => w.length > 2),
+                        source: 'learned_from_feedback',
+                        originalRating: conversation.feedback.rating
+                    });
+                    
+                    return true;
+                }
+                return false;
+            }
+
+            getStats() {
+                const knowledge = this.getKnowledge();
+                const conversations = this.getConversations();
+                const categories = [...new Set(knowledge.map(k => k.category))];
+                const lastEntry = knowledge.length > 0 ? 
+                    new Date(Math.max(...knowledge.map(k => new Date(k.createdAt)))).toLocaleDateString() : 
+                    'Never';
+                
+                const learnedEntries = knowledge.filter(k => k.source === 'learned_from_feedback').length;
+                
+                return {
+                    totalEntries: knowledge.length,
+                    categories: categories.length,
+                    lastAdded: lastEntry,
+                    totalConversations: conversations.length,
+                    learnedFromFeedback: learnedEntries
+                };
+            }
+        }
+
+        const km = new LocalKnowledgeManager();
+
+        function updateStats() {
+            const stats = km.getStats();
+            document.getElementById('totalEntries').textContent = stats.totalEntries;
+            document.getElementById('categories').textContent = stats.categories;
+            document.getElementById('lastAdded').textContent = stats.lastAdded;
+            
+            // Add conversation stats if available
+            if (stats.totalConversations !== undefined) {
+                const conversationStats = document.getElementById('conversationStats');
+                if (conversationStats) {
+                    conversationStats.innerHTML = `
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.totalConversations}</div>
+                            <div>Conversations</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.learnedFromFeedback}</div>
+                            <div>Learned Responses</div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function loadKnowledge() {
+            const knowledge = km.getKnowledge();
+            const container = document.getElementById('knowledgeList');
+            
+            if (knowledge.length === 0) {
+                container.innerHTML = '<p>No knowledge entries found. Add some knowledge below!</p>';
+                return;
+            }
+
+            container.innerHTML = knowledge.map(entry => `
+                <div class="knowledge-item">
+                    <div>
+                        <span class="category-badge">${entry.category}</span>
+                        <strong>${entry.title}</strong>
+                    </div>
+                    <p>${entry.content}</p>
+                    ${entry.keywords ? `<small>Keywords: ${entry.keywords.join(', ')}</small>` : ''}
+                    <br><small>Added: ${new Date(entry.createdAt).toLocaleString()}</small>
+                </div>
+            `).join('');
+            
+            updateStats();
+        }
+
+        function addKnowledge() {
+            const title = document.getElementById('title').value.trim();
+            const content = document.getElementById('content').value.trim();
+            const category = document.getElementById('category').value;
+            const keywords = document.getElementById('keywords').value.trim();
+
+            if (!title || !content) {
+                alert('Please fill in title and content!');
+                return;
+            }
+
+            const entry = {
+                title,
+                content,
+                category,
+                keywords: keywords ? keywords.split(',').map(k => k.trim()) : []
+            };
+
+            km.addEntry(entry);
+            
+            // Clear form
+            document.getElementById('title').value = '';
+            document.getElementById('content').value = '';
+            document.getElementById('keywords').value = '';
+            
+            alert('✅ Knowledge added successfully!');
+            loadKnowledge();
+        }
+
+        function trainFromChat() {
+            const question = document.getElementById('question').value.trim();
+            const answer = document.getElementById('answer').value.trim();
+
+            if (!question || !answer) {
+                alert('Please fill in both question and answer!');
+                return;
+            }
+
+            const entry = {
+                title: question,
+                content: answer,
+                category: 'user-questions',
+                keywords: question.toLowerCase().split(' ').filter(w => w.length > 2)
+            };
+
+            km.addEntry(entry);
+            
+            // Clear form
+            document.getElementById('question').value = '';
+            document.getElementById('answer').value = '';
+            
+            alert('🎓 AI trained successfully from conversation!');
+            loadKnowledge();
+        }
+
+        function searchKnowledge() {
+            const query = document.getElementById('searchQuery').value.trim();
+            
+            if (!query) {
+                alert('Please enter a search query!');
+                return;
+            }
+
+            const results = km.search(query);
+            const container = document.getElementById('searchResults');
+            
+            if (results.length === 0) {
+                container.innerHTML = '<p>No results found. Try adding this knowledge!</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <h3>🎯 Found ${results.length} results:</h3>
+                ${results.map(result => `
+                    <div class="knowledge-item">
+                        <div>
+                            <span class="category-badge">${result.category}</span>
+                            <strong>${result.title}</strong>
+                            ${result.score ? `<span style="color: #ffd700; margin-left: 10px;">Score: ${result.score}</span>` : ''}
+                        </div>
+                        <p>${result.content}</p>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        // New function for interactive AI chat
+        function askAI() {
+            const question = document.getElementById('userQuestion').value.trim();
+            
+            if (!question) {
+                alert('Please ask a question!');
+                return;
+            }
+
+            // Generate AI response
+            const response = km.generateResponse(question);
+            
+            // Record the conversation
+            const conversation = km.recordConversation(question, response.answer, response.source);
+            
+            // Display the conversation
+            displayConversation(conversation, response);
+            
+            // Clear input
+            document.getElementById('userQuestion').value = '';
+            
+            // Update stats
+            updateStats();
+        }
+
+        function displayConversation(conversation, response) {
+            const container = document.getElementById('chatHistory');
+            
+            const conversationHtml = `
+                <div class="chat-message">
+                    <strong>👤 You:</strong>
+                    <p>${conversation.question}</p>
+                </div>
+                <div class="chat-message ai-response">
+                    <strong>🤖 AI:</strong>
+                    <p>${conversation.answer}</p>
+                    ${response.sourceTitle ? `<small>📚 Source: ${response.sourceTitle}</small><br>` : ''}
+                    <small>🔍 Confidence: ${response.confidence} | Source: ${response.source}</small>
+                    
+                    <div class="feedback-buttons">
+                        <strong>Was this helpful? 🤔</strong><br>
+                        <button class="satisfied" onclick="giveFeedback('${conversation.id}', 5, 'Very helpful!')">
+                            😊 Yes, very helpful!
+                        </button>
+                        <button class="satisfied" onclick="giveFeedback('${conversation.id}', 4, 'Helpful')">
+                            👍 Yes, helpful
+                        </button>
+                        <button class="unsatisfied" onclick="giveFeedback('${conversation.id}', 2, 'Not quite right')">
+                            👎 Not quite right
+                        </button>
+                        <button class="unsatisfied" onclick="giveFeedback('${conversation.id}', 1, 'Not helpful')">
+                            😞 Not helpful at all
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = conversationHtml + container.innerHTML;
+        }
+
+        function giveFeedback(conversationId, rating, comments) {
+            const learned = km.processFeedback(conversationId, rating, comments);
+            
+            // Show feedback confirmation
+            const container = document.getElementById('chatHistory');
+            let feedbackMessage = '';
+            
+            if (rating >= 4) {
+                if (learned) {
+                    feedbackMessage = '<div class="learning-notification">🎉 Great! I learned from this conversation and will use it to help future users! 🧠✨</div>';
+                } else {
+                    feedbackMessage = '<div class="learning-notification">✅ Thank you for the positive feedback! This helps me improve! 😊</div>';
+                }
+            } else {
+                feedbackMessage = '<div class="learning-notification">📝 Thank you for the feedback! I\'ll work on improving my responses. 💪</div>';
+            }
+            
+            container.innerHTML = feedbackMessage + container.innerHTML;
+            
+            // Remove feedback buttons for this conversation
+            const buttons = document.querySelectorAll(`button[onclick*="${conversationId}"]`);
+            buttons.forEach(button => {
+                const parent = button.parentElement;
+                parent.innerHTML = `<small>✅ Feedback received (${rating}/5): ${comments}</small>`;
+            });
+            
+            // Update stats and refresh knowledge display
+            updateStats();
+            loadKnowledge();
+        }
+
+        // Initialize with some sample data if empty
+        window.addEventListener('load', function() {
+            const knowledge = km.getKnowledge();
+            if (knowledge.length === 0) {
+                // Add sample knowledge
+                km.addEntry({
+                    title: "DevVibe Pro Services",
+                    content: "We offer custom software development, AI integration, web development, mobile apps, and technical consulting services.",
+                    category: "services",
+                    keywords: ["development", "ai", "consulting", "mobile", "web"]
+                });
+                km.addEntry({
+                    title: "Pricing Information",
+                    content: "Our projects typically range from $2,000 to $50,000 depending on complexity. We offer flexible payment plans.",
+                    category: "business",
+                    keywords: ["pricing", "cost", "payment", "plans"]
+                });
+                km.addEntry({
+                    title: "Project Timeline",
+                    content: "Most projects take 2-8 weeks depending on scope. We provide weekly updates and maintain clear communication.",
+                    category: "business",
+                    keywords: ["timeline", "duration", "updates", "communication"]
+                });
+            }
+            loadKnowledge();
+            
+            // Add keyboard support
+            document.getElementById('userQuestion').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    askAI();
+                }
+            });
+            
+            document.getElementById('searchQuery').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchKnowledge();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
