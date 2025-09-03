@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Chat Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .chat-container { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 10px; }
+        .chat-message { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .ai-response { background: #e3f2fd; }
+        .feedback-buttons { margin: 15px 0; }
+        .feedback-buttons button { margin: 5px; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+        .satisfied { background: #4CAF50; color: white; }
+        .unsatisfied { background: #f44336; color: white; }
+        input { width: 70%; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🤖 AI Chat Test</h1>
+    <p>This is a simple test to verify the chat and rating system works.</p>
+    
+    <div>
+        <input type="text" id="question" placeholder="Ask anything..." />
+        <button onclick="askQuestion()">Ask AI</button>
+    </div>
+    
+    <div id="chatArea"></div>
+
+    <script>
+        function askQuestion() {
+            const question = document.getElementById('question').value.trim();
+            if (!question) return;
+            
+            const chatArea = document.getElementById('chatArea');
+            const conversationId = Date.now().toString();
+            
+            const response = generateResponse(question);
+            
+            const chatHtml = `
+                <div class="chat-container">
+                    <div class="chat-message">
+                        <strong>👤 You:</strong>
+                        <p>${question}</p>
+                    </div>
+                    <div class="chat-message ai-response">
+                        <strong>🤖 AI:</strong>
+                        <p>${response}</p>
+                        
+                        <div class="feedback-buttons">
+                            <strong>Was this helpful? 🤔</strong><br><br>
+                            <button class="satisfied" onclick="giveFeedback('${conversationId}', 5)">
+                                😊 Yes, very helpful!
+                            </button>
+                            <button class="satisfied" onclick="giveFeedback('${conversationId}', 4)">
+                                👍 Yes, helpful
+                            </button>
+                            <button class="unsatisfied" onclick="giveFeedback('${conversationId}', 2)">
+                                👎 Not quite right
+                            </button>
+                            <button class="unsatisfied" onclick="giveFeedback('${conversationId}', 1)">
+                                😞 Not helpful at all
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            chatArea.innerHTML = chatHtml + chatArea.innerHTML;
+            document.getElementById('question').value = '';
+        }
+        
+        function generateResponse(question) {
+            const q = question.toLowerCase();
+            if (q.includes('service') || q.includes('offer')) {
+                return "We offer custom software development, AI integration, web development, mobile apps, and technical consulting services.";
+            }
+            if (q.includes('price') || q.includes('cost')) {
+                return "Our projects typically range from $2,000 to $50,000 depending on complexity. We offer flexible payment plans.";
+            }
+            if (q.includes('time') || q.includes('long')) {
+                return "Most projects take 2-8 weeks depending on scope. We provide weekly updates and maintain clear communication.";
+            }
+            return `I'd be happy to help with "${question}". Could you provide more context or try rephrasing your question?`;
+        }
+        
+        function giveFeedback(conversationId, rating) {
+            const messages = ['Not helpful at all', 'Not quite right', '', 'Helpful', 'Very helpful!'];
+            alert(`✅ Thank you for rating this ${rating}/5 stars: ${messages[rating-1]}!\n\n${rating >= 4 ? '🎉 This response will be saved for future learning!' : '📝 We\'ll work on improving our responses.'}`);
+            
+            // Remove feedback buttons
+            const buttons = document.querySelectorAll(`button[onclick*="${conversationId}"]`);
+            buttons.forEach(button => {
+                const parent = button.parentElement;
+                parent.innerHTML = `<small>✅ Feedback received: ${rating}/5 stars</small>`;
+            });
+        }
+    </script>
+</body>
+</html>

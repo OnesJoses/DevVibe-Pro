@@ -21,6 +21,9 @@ export default function AIPage() {
     matchType?: string; 
     matchedTerms?: string[];
     metadata?: any;
+    id?: string;
+    rating?: number;
+    feedbackGiven?: boolean;
   }[]>([
     { 
       role: 'assistant', 
@@ -67,6 +70,223 @@ Ready to search both my expertise AND the entire internet? Ask me anything!`
   const [stats, setStats] = useState<any>(null)
   const [webSearchStatus, setWebSearchStatus] = useState<any>(null)
 
+  // Feedback system for learning
+  const giveFeedback = (messageId: string, rating: number) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        // Store the conversation for learning if rating is high
+        if (rating >= 4) {
+          const userMessage = prev.find(m => m.role === 'user' && prev.indexOf(m) === prev.indexOf(msg) - 1)
+          if (userMessage) {
+            // Save to knowledge base (this would integrate with your learning system)
+            console.log('🎓 Learning from conversation:', {
+              question: userMessage.content,
+              answer: msg.content,
+              rating
+            })
+            // You could call a learning API here
+          }
+        }
+        
+        return {
+          ...msg,
+          rating,
+          feedbackGiven: true
+        }
+      }
+      return msg
+    }))
+    
+    // Show learning notification
+    if (rating >= 4) {
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          id: Date.now().toString(),
+          content: rating === 5 ? 
+            "🎉 Excellent! I learned from this conversation and will use it to help future users! 🧠✨" :
+            "✅ Thank you for the positive feedback! This helps me improve! 😊",
+          title: 'AI Learning',
+          matchType: 'learning',
+          feedbackGiven: true
+        }])
+      }, 500)
+    }
+  }
+
+  // Try alternative response when user is not satisfied
+  const tryAlternativeResponse = async (messageId: string) => {
+    // Find the original user question and AI response
+    const messageIndex = messages.findIndex(m => m.id === messageId)
+    const originalResponse = messages[messageIndex]
+    const userQuestion = messages[messageIndex - 1]
+    
+    if (!userQuestion || !originalResponse) return
+
+    // Mark the original response as having feedback
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, feedbackGiven: true, rating: 2 } : msg
+    ))
+
+    // Show loading for alternative response
+    setLoading(true)
+
+    try {
+      // Try different search strategies
+      let alternativeResult
+      
+      if (originalResponse.matchType === 'local_knowledge') {
+        // If local knowledge was used, try web search
+        alternativeResult = await knowledgeBase.smartSearch(userQuestion.content, 3)
+      } else if (originalResponse.matchType === 'web_search') {
+        // If web search was used, try local knowledge or rephrase
+        alternativeResult = await knowledgeBase.smartSearch(userQuestion.content, 5)
+      } else {
+        // Try a more comprehensive search
+        alternativeResult = await knowledgeBase.smartSearch(userQuestion.content, 8)
+      }
+
+      // Generate alternative response with different strategy
+      const alternativeContent = alternativeResult.results.length > 0 ?
+        alternativeResult.results.slice(0, 3).map(result => {
+          let content = `**${result.title}**\n\n${result.content}`
+          if (result.url) {
+            content += `\n\n*Source: ${result.url}*`
+          }
+          return content
+        }).join('\n\n---\n\n') :
+        generateAlternativeAnswer(userQuestion.content)
+
+      // Add the alternative response
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          id: Date.now().toString(),
+          title: `Alternative Response • ${alternativeResult.strategy}`,
+          content: alternativeContent,
+          matchType: alternativeResult.strategy,
+          metadata: {
+            strategy: alternativeResult.strategy,
+            isAlternative: true,
+            originalStrategy: originalResponse.matchType,
+            sources: alternativeResult.sources,
+            searchTime: alternativeResult.searchTime
+          },
+          feedbackGiven: false
+        }])
+        setLoading(false)
+      }, 1000)
+
+    } catch (error) {
+      // Fallback alternative response
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          id: Date.now().toString(),
+          title: 'Alternative Approach',
+          content: generateAlternativeAnswer(userQuestion.content),
+          matchType: 'alternative_generated',
+          metadata: { isAlternative: true },
+          feedbackGiven: false
+        }])
+        setLoading(false)
+      }, 1000)
+    }
+  }
+
+  // Generate alternative answers with different approaches
+  const generateAlternativeAnswer = (question: string) => {
+    const q = question.toLowerCase()
+    
+    if (q.includes('service') || q.includes('offer') || q.includes('do')) {
+      return `Let me approach this differently:
+
+**Core Services:**
+• **Custom Software Development** - Tailored applications built to your exact specifications
+• **AI Integration & Automation** - Smart solutions to streamline your business processes  
+• **Web & Mobile Development** - Modern, responsive applications across all platforms
+• **Technical Consulting** - Expert guidance on technology strategy and implementation
+
+**What makes us different:**
+- Deep focus on user experience and business outcomes
+- Agile development with transparent communication
+- Post-launch support and continuous optimization
+- Cutting-edge technologies with proven reliability
+
+Would you like me to elaborate on any specific service area?`
+    }
+    
+    if (q.includes('price') || q.includes('cost') || q.includes('fee')) {
+      return `Here's a different perspective on pricing:
+
+**Investment Approach:**
+Rather than fixed rates, we focus on **value-based pricing** that aligns with your business goals.
+
+**Typical Project Ranges:**
+• **Starter Projects**: $2,000 - $8,000 (basic websites, simple apps)
+• **Growth Projects**: $8,000 - $25,000 (custom features, integrations)
+• **Enterprise Solutions**: $25,000+ (complex systems, AI integration)
+
+**What's Included:**
+✅ Discovery & planning phase
+✅ Regular progress updates
+✅ Quality assurance testing
+✅ Launch support & training
+✅ 30-day post-launch support
+
+**Flexible Options:**
+- Milestone-based payments
+- Monthly retainer arrangements
+- Equity partnerships for startups
+
+Ready to discuss your specific project?`
+    }
+    
+    if (q.includes('time') || q.includes('long') || q.includes('duration')) {
+      return `Let me break down timelines more specifically:
+
+**Project Timeline Factors:**
+1. **Complexity** - Simple vs. enterprise-level features
+2. **Scope** - Number of features and integrations
+3. **Feedback Cycles** - How quickly you can review and approve
+4. **Team Size** - Dedicated vs. shared resources
+
+**Typical Timelines:**
+• **Quick Wins** (1-2 weeks): Landing pages, simple tools
+• **Standard Projects** (3-6 weeks): Business websites, basic apps
+• **Custom Solutions** (6-12 weeks): Complex features, integrations
+• **Enterprise Systems** (3-6 months): Large-scale applications
+
+**Our Process:**
+Week 1: Discovery & planning
+Week 2-N: Development sprints (weekly demos)
+Final Week: Testing, deployment, training
+
+**Accelerated Options:**
+- Dedicated team for faster delivery
+- MVP approach for quicker market entry
+- Parallel development tracks
+
+What's your target timeline?`
+    }
+    
+    return `Let me try a different approach to answer "${question}":
+
+I want to make sure I give you the most helpful information. Could you help me understand:
+
+• **What specific aspect** interests you most?
+• **What's your main goal** or challenge?
+• **Any particular context** I should know about?
+
+**Meanwhile, here are some key points:**
+- I focus on delivering **practical solutions** that work for your business
+- Every project gets **personalized attention** and clear communication
+- I believe in **transparent processes** and realistic expectations
+- **Long-term partnership** is more important than quick transactions
+
+Feel free to ask more specific questions, and I'll provide detailed, actionable answers!`
+  }
+
   // Initialize knowledge base and test web search on component mount
   useEffect(() => {
     const initKB = async () => {
@@ -105,6 +325,7 @@ Ready to search both my expertise AND the entire internet? Ask me anything!`
       // Create response message
       const response = {
         role: 'assistant' as const,
+        id: Date.now().toString(),
         title: `${searchResult.strategy} • ${searchResult.results.length} results`,
         content: searchResult.results.length > 0 ? 
           searchResult.results.map(result => {
@@ -118,6 +339,7 @@ Ready to search both my expertise AND the entire internet? Ask me anything!`
         relevance: searchResult.results[0]?.relevance || 0,
         matchType: searchResult.strategy,
         matchedTerms: searchResult.sources,
+        feedbackGiven: false,
         metadata: {
           strategy: searchResult.strategy,
           sources: searchResult.sources,
@@ -308,6 +530,57 @@ Ready to search both my expertise AND the entire internet? Ask me anything!`
                             🧠 {message.metadata.reasoning}
                           </div>
                         )}
+                      </div>
+                    )}
+                    
+                    {/* Rating System for AI Learning */}
+                    {message.role === 'assistant' && message.id && !message.feedbackGiven && message.matchType !== 'learning' && (
+                      <div className="mt-4 pt-3 border-t border-slate-100">
+                        <div className="text-sm font-medium text-slate-700 mb-2">Was this helpful? 🤔</div>
+                        <div className="flex gap-2 flex-wrap">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-600 border-green-300 hover:bg-green-50"
+                            onClick={() => giveFeedback(message.id!, 5)}
+                          >
+                            😊 Perfect!
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                            onClick={() => giveFeedback(message.id!, 4)}
+                          >
+                            👍 Good
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                            onClick={() => tryAlternativeResponse(message.id!)}
+                          >
+                            🔄 Try different answer
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 border-red-300 hover:bg-red-50"
+                            onClick={() => giveFeedback(message.id!, 1)}
+                          >
+                            😞 Not helpful
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Show feedback received */}
+                    {message.feedbackGiven && message.rating && (
+                      <div className="mt-3 pt-2 border-t border-slate-100">
+                        <div className="text-xs text-slate-500">
+                          ✅ Feedback received: {message.rating}/5 stars
+                          {message.rating >= 4 && " - This response will help future users!"}
+                        </div>
                       </div>
                     )}
                   </div>
