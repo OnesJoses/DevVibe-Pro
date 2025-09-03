@@ -8,6 +8,7 @@ import SettingsPage from './pages/Settings'
 import ProjectDetailPage from './pages/ProjectDetail'
 import ForgotPasswordPage from './pages/ForgotPassword'
 import ResetPasswordPage from './pages/ResetPassword'
+import AuthCallback from './pages/AuthCallback'
 import AIPage from './pages/AI'
 import AdminHelperPage from './pages/AdminHelper'
 import EcommerceDemo from './pages/demos/EcommerceDemo'
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/ai" element={<AIPage />} />
         <Route path="/admin-helper" element={<AdminHelperPage />} />
         <Route path="/demo/ecommerce" element={<EcommerceDemo />} />

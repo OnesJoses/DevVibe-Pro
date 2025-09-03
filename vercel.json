@@ -3,6 +3,13 @@
   "builds": [
     { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
   ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://onesmusm-workspace.vercel.app/",
+      "permanent": false
+    }
+  ],
   "routes": [
     { "handle": "filesystem" },
     { "src": "/.*", "dest": "/index.html" }
