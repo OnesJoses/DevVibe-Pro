@@ -184,6 +184,8 @@
                 this.storageKey = 'devvibe-ai-knowledge';
                 this.conversationKey = 'devvibe-conversations';
                 this.pendingFeedbackKey = 'devvibe-pending-feedback';
+                this.badResponsesKey = 'devvibe-bad-responses';
+                this.excellentResponsesKey = 'devvibe-excellent-responses';
             }
 
             getKnowledge() {
@@ -221,6 +223,66 @@
 
             savePendingFeedback(pending) {
                 localStorage.setItem(this.pendingFeedbackKey, JSON.stringify(pending));
+            }
+
+            getBadResponses() {
+                const stored = localStorage.getItem(this.badResponsesKey);
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            saveBadResponses(badResponses) {
+                localStorage.setItem(this.badResponsesKey, JSON.stringify(badResponses));
+            }
+
+            getExcellentResponses() {
+                const stored = localStorage.getItem(this.excellentResponsesKey);
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            saveExcellentResponses(excellentResponses) {
+                localStorage.setItem(this.excellentResponsesKey, JSON.stringify(excellentResponses));
+            }
+
+            // Check if a question-answer combination is marked as bad
+            isBadResponse(question, answer) {
+                const badResponses = this.getBadResponses();
+                return badResponses.some(bad => 
+                    this.similarQuestions(question, bad.question) && 
+                    this.similarAnswers(answer, bad.answer)
+                );
+            }
+
+            // Check if we have an excellent response for this question
+            getExcellentResponse(question) {
+                const excellentResponses = this.getExcellentResponses();
+                const match = excellentResponses.find(excellent => 
+                    this.similarQuestions(question, excellent.question)
+                );
+                return match ? match.answer : null;
+            }
+
+            // Compare questions for similarity (simple implementation)
+            similarQuestions(q1, q2) {
+                const normalize = (str) => str.toLowerCase().replace(/[^\w\s]/g, '').trim();
+                const norm1 = normalize(q1);
+                const norm2 = normalize(q2);
+                
+                // Check if questions are very similar (80% word overlap)
+                const words1 = norm1.split(' ').filter(w => w.length > 2);
+                const words2 = norm2.split(' ').filter(w => w.length > 2);
+                
+                if (words1.length === 0 || words2.length === 0) return false;
+                
+                const commonWords = words1.filter(word => words2.includes(word));
+                const similarity = commonWords.length / Math.max(words1.length, words2.length);
+                
+                return similarity >= 0.6; // 60% similarity threshold
+            }
+
+            // Compare answers for similarity
+            similarAnswers(a1, a2) {
+                const normalize = (str) => str.toLowerCase().replace(/[^\w\s]/g, '').trim();
+                return normalize(a1).substring(0, 100) === normalize(a2).substring(0, 100);
             }
 
             addEntry(entry) {
@@ -276,29 +338,54 @@
                     .sort((a, b) => b.score - a.score);
             }
 
-            // Smart AI response generation
+            // Smart AI response generation with learning
             generateResponse(question) {
+                // First, check if we have an excellent response for this question
+                const excellentResponse = this.getExcellentResponse(question);
+                if (excellentResponse) {
+                    return {
+                        answer: excellentResponse,
+                        confidence: 'very_high',
+                        source: 'excellent_learned_response',
+                        sourceTitle: 'Previously Rated 5/5 Response'
+                    };
+                }
+
+                // Then search regular knowledge base
                 const searchResults = this.search(question);
                 
                 if (searchResults.length > 0) {
                     const bestMatch = searchResults[0];
                     
-                    // If it's a direct knowledge entry, return it
-                    if (bestMatch.score >= 5) {
-                        return {
-                            answer: bestMatch.content,
-                            confidence: 'high',
-                            source: 'learned_knowledge',
-                            sourceTitle: bestMatch.title
-                        };
+                    // Check if this response was previously rated as bad
+                    if (!this.isBadResponse(question, bestMatch.content)) {
+                        if (bestMatch.score >= 5) {
+                            return {
+                                answer: bestMatch.content,
+                                confidence: 'high',
+                                source: 'learned_knowledge',
+                                sourceTitle: bestMatch.title
+                            };
+                        }
                     }
                 }
                 
-                // Generate a generic helpful response
+                // Generate a generic response, but check if it was previously rated as bad
+                const genericResponse = this.generateGenericResponse(question);
+                
+                if (!this.isBadResponse(question, genericResponse)) {
+                    return {
+                        answer: genericResponse,
+                        confidence: 'medium',
+                        source: 'generated'
+                    };
+                }
+
+                // If even generic response was bad, generate an alternative
                 return {
-                    answer: this.generateGenericResponse(question),
-                    confidence: 'medium',
-                    source: 'generated'
+                    answer: this.generateAlternativeResponse(question),
+                    confidence: 'low',
+                    source: 'alternative_generated'
                 };
             }
 
@@ -324,6 +411,20 @@
                 return "That's a great question! I'd love to help you with that. Could you provide a bit more detail so I can give you the most accurate information?";
             }
 
+            generateAlternativeResponse(question) {
+                const questionLower = question.toLowerCase();
+                
+                if (questionLower.includes('service') || questionLower.includes('offer')) {
+                    return "I understand you're asking about our services. Let me approach this differently - we focus on creating custom solutions that solve real business problems. What specific challenge are you trying to address?";
+                }
+                
+                if (questionLower.includes('price') || questionLower.includes('cost')) {
+                    return "For pricing, I'd prefer to understand your specific needs first so I can provide the most relevant information. What type of project are you considering?";
+                }
+                
+                return "Let me try a different approach to help you better. Could you tell me more about what you're looking to achieve?";
+            }
+
             // Record conversation for learning
             recordConversation(question, answer, source) {
                 const conversations = this.getConversations();
@@ -340,7 +441,7 @@
                 return conversation;
             }
 
-            // Process user feedback
+            // Enhanced feedback processing with learning
             processFeedback(conversationId, rating, comments) {
                 const conversations = this.getConversations();
                 const conversation = conversations.find(c => c.id === conversationId);
@@ -349,13 +450,87 @@
                     conversation.feedback = { rating, comments, timestamp: new Date().toISOString() };
                     this.saveConversations(conversations);
                     
-                    // If rating is 4 or 5, automatically add to knowledge base
-                    if (rating >= 4) {
+                    // Handle excellent responses (5/5)
+                    if (rating === 5) {
+                        this.saveExcellentResponse(conversation);
                         this.learnFromGoodResponse(conversation);
-                        return true; // Learned
+                        return { learned: true, type: 'excellent' };
+                    }
+                    
+                    // Handle good responses (4/5)
+                    if (rating === 4) {
+                        this.learnFromGoodResponse(conversation);
+                        return { learned: true, type: 'good' };
+                    }
+                    
+                    // Handle bad responses (1-2/5)
+                    if (rating <= 2) {
+                        this.saveBadResponse(conversation);
+                        return { learned: true, type: 'bad' };
                     }
                 }
-                return false; // Not learned
+                return { learned: false, type: 'none' };
+            }
+
+            // Save excellent responses for reuse
+            saveExcellentResponse(conversation) {
+                const excellentResponses = this.getExcellentResponses();
+                
+                // Check if similar response already exists
+                const existing = excellentResponses.find(excellent => 
+                    this.similarQuestions(conversation.question, excellent.question)
+                );
+                
+                if (!existing) {
+                    const excellentResponse = {
+                        id: Date.now().toString(),
+                        question: conversation.question,
+                        answer: conversation.answer,
+                        rating: 5,
+                        timestamp: new Date().toISOString(),
+                        usage_count: 0,
+                        source: conversation.source || 'conversation'
+                    };
+                    
+                    excellentResponses.push(excellentResponse);
+                    this.saveExcellentResponses(excellentResponses);
+                    
+                    console.log('⭐ Saved excellent response for reuse:', excellentResponse.question);
+                } else {
+                    // Update existing excellent response if this one is better
+                    existing.answer = conversation.answer;
+                    existing.timestamp = new Date().toISOString();
+                    this.saveExcellentResponses(excellentResponses);
+                    
+                    console.log('⭐ Updated excellent response:', existing.question);
+                }
+            }
+
+            // Save bad responses to avoid repeating them
+            saveBadResponse(conversation) {
+                const badResponses = this.getBadResponses();
+                
+                // Check if this bad response combination already exists
+                const existing = badResponses.find(bad => 
+                    this.similarQuestions(conversation.question, bad.question) &&
+                    this.similarAnswers(conversation.answer, bad.answer)
+                );
+                
+                if (!existing) {
+                    const badResponse = {
+                        id: Date.now().toString(),
+                        question: conversation.question,
+                        answer: conversation.answer,
+                        rating: conversation.feedback.rating,
+                        timestamp: new Date().toISOString(),
+                        reason: conversation.feedback.comments || 'Not helpful'
+                    };
+                    
+                    badResponses.push(badResponse);
+                    this.saveBadResponses(badResponses);
+                    
+                    console.log('❌ Marked response as bad, will not repeat:', badResponse.question);
+                }
             }
 
             learnFromGoodResponse(conversation) {
@@ -386,6 +561,8 @@
             getStats() {
                 const knowledge = this.getKnowledge();
                 const conversations = this.getConversations();
+                const excellentResponses = this.getExcellentResponses();
+                const badResponses = this.getBadResponses();
                 const categories = [...new Set(knowledge.map(k => k.category))];
                 const lastEntry = knowledge.length > 0 ? 
                     new Date(Math.max(...knowledge.map(k => new Date(k.createdAt)))).toLocaleDateString() : 
@@ -398,7 +575,12 @@
                     categories: categories.length,
                     lastAdded: lastEntry,
                     totalConversations: conversations.length,
-                    learnedFromFeedback: learnedEntries
+                    learnedFromFeedback: learnedEntries,
+                    excellentResponses: excellentResponses.length,
+                    badResponses: badResponses.length,
+                    learningRate: conversations.length > 0 ? 
+                        ((excellentResponses.length + learnedEntries) / conversations.length * 100).toFixed(1) + '%' : 
+                        '0%'
                 };
             }
         }
@@ -421,8 +603,16 @@
                             <div>Conversations</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number">${stats.learnedFromFeedback}</div>
-                            <div>Learned Responses</div>
+                            <div class="stat-number">${stats.excellentResponses || 0}</div>
+                            <div>⭐ Excellent Responses</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.badResponses || 0}</div>
+                            <div>❌ Bad Responses</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.learningRate || '0%'}</div>
+                            <div>Learning Rate</div>
                         </div>
                     `;
                 }
@@ -600,20 +790,20 @@
         }
 
         function giveFeedback(conversationId, rating, comments) {
-            const learned = km.processFeedback(conversationId, rating, comments);
+            const result = km.processFeedback(conversationId, rating, comments);
             
-            // Show feedback confirmation
+            // Show enhanced feedback confirmation
             const container = document.getElementById('chatHistory');
             let feedbackMessage = '';
             
-            if (rating >= 4) {
-                if (learned) {
-                    feedbackMessage = '<div class="learning-notification">🎉 Great! I learned from this conversation and will use it to help future users! 🧠✨</div>';
-                } else {
-                    feedbackMessage = '<div class="learning-notification">✅ Thank you for the positive feedback! This helps me improve! 😊</div>';
-                }
+            if (rating === 5) {
+                feedbackMessage = '<div class="learning-notification">🌟 EXCELLENT! This response has been saved and will be used to help all future users with similar questions! 🎯✨</div>';
+            } else if (rating === 4) {
+                feedbackMessage = '<div class="learning-notification">🎉 Great! I learned from this conversation and added it to my knowledge base! 🧠✨</div>';
+            } else if (rating <= 2) {
+                feedbackMessage = '<div class="learning-notification">📝 Got it! I\'ve marked this response as unhelpful and will never repeat it. I\'ll try different approaches next time! �</div>';
             } else {
-                feedbackMessage = '<div class="learning-notification">📝 Thank you for the feedback! I\'ll work on improving my responses. 💪</div>';
+                feedbackMessage = '<div class="learning-notification">� Thank you for the feedback! This helps me improve! �</div>';
             }
             
             container.innerHTML = feedbackMessage + container.innerHTML;
@@ -622,7 +812,11 @@
             const buttons = document.querySelectorAll(`button[onclick*="${conversationId}"]`);
             buttons.forEach(button => {
                 const parent = button.parentElement;
-                parent.innerHTML = `<small>✅ Feedback received (${rating}/5): ${comments}</small>`;
+                const ratingEmoji = rating === 5 ? '⭐⭐⭐⭐⭐' : 
+                                   rating === 4 ? '⭐⭐⭐⭐' : 
+                                   rating === 3 ? '⭐⭐⭐' : 
+                                   rating === 2 ? '⭐⭐' : '⭐';
+                parent.innerHTML = `<small>✅ Feedback received: ${ratingEmoji} (${rating}/5) - ${comments}</small>`;
             });
             
             // Update stats and refresh knowledge display

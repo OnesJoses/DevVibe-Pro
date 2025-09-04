@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bad Response Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .bad-response { background: #fff3cd; padding: 10px; margin: 5px 0; border-left: 4px solid #ffc107; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Bad Response Test</h1>
+    
+    <div class="test">
+        <h3>Step 1: Add a bad response to localStorage</h3>
+        <button onclick="addBadResponse()">Add Bad Response</button>
+        <div id="addResult"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Step 2: Test similarity detection</h3>
+        <button onclick="testSimilarity()">Test Question Similarity</button>
+        <div id="similarityResult"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Step 3: Test bad response filtering</h3>
+        <button onclick="testFiltering()">Test Response Filtering</button>
+        <div id="filterResult"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Current Bad Responses in Storage:</h3>
+        <button onclick="showBadResponses()">Show All Bad Responses</button>
+        <div id="badResponsesList"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Clear Test Data:</h3>
+        <button onclick="clearBadResponses()">Clear All Bad Responses</button>
+        <div id="clearResult"></div>
+    </div>
+
+    <script>
+        function addBadResponse() {
+            const badResponse = {
+                id: Date.now().toString(),
+                question: "What services do you offer?",
+                answer: "How Much Does a Project Cost?\n\nInvestment Levels Based on Project Complexity:\n\n🚀 Simple Projects: $2,500 - $7,500",
+                rating: 1,
+                timestamp: new Date().toISOString()
+            };
+            
+            const badResponses = JSON.parse(localStorage.getItem('devvibe-bad-responses') || '[]');
+            badResponses.push(badResponse);
+            localStorage.setItem('devvibe-bad-responses', JSON.stringify(badResponses));
+            
+            document.getElementById('addResult').innerHTML = 
+                '<div class="success">✅ Added bad response to localStorage</div>';
+            showBadResponses();
+        }
+        
+        function similarQuestions(q1, q2) {
+            const normalize = (str) => str.toLowerCase().replace(/[^\w\s]/g, '').trim();
+            const norm1 = normalize(q1);
+            const norm2 = normalize(q2);
+            
+            const words1 = norm1.split(' ').filter(w => w.length > 2);
+            const words2 = norm2.split(' ').filter(w => w.length > 2);
+            
+            if (words1.length === 0 || words2.length === 0) return false;
+            
+            const commonWords = words1.filter(word => words2.includes(word));
+            const similarity = commonWords.length / Math.max(words1.length, words2.length);
+            
+            return similarity >= 0.6; // 60% similarity threshold
+        }
+        
+        function testSimilarity() {
+            const tests = [
+                { q1: "What services do you offer?", q2: "What services do you offer?", expected: true },
+                { q1: "What services do you offer?", q2: "What do you offer?", expected: true },
+                { q1: "What services do you offer?", q2: "Tell me about your services", expected: true },
+                { q1: "What services do you offer?", q2: "How much does it cost?", expected: false },
+            ];
+            
+            let html = '<h4>Similarity Test Results:</h4>';
+            tests.forEach(test => {
+                const result = similarQuestions(test.q1, test.q2);
+                const status = result === test.expected ? '✅' : '❌';
+                html += `<div>${status} "${test.q2}" → ${result} (expected: ${test.expected})</div>`;
+            });
+            
+            document.getElementById('similarityResult').innerHTML = html;
+        }
+        
+        function checkIfBadResponse(question, answer) {
+            try {
+                const badResponses = JSON.parse(localStorage.getItem('devvibe-bad-responses') || '[]');
+                
+                return badResponses.some(bad => {
+                    const questionMatch = similarQuestions(question, bad.question);
+                    const answerMatch = answer.toLowerCase().includes(bad.answer.toLowerCase().substring(0, 150));
+                    
+                    return questionMatch && answerMatch;
+                });
+            } catch (error) {
+                console.error('Error checking bad responses:', error);
+                return false;
+            }
+        }
+        
+        function testFiltering() {
+            const testCases = [
+                {
+                    question: "What services do you offer?",
+                    answer: "How Much Does a Project Cost?\n\nInvestment Levels Based on Project Complexity:\n\n🚀 Simple Projects: $2,500 - $7,500",
+                    expectedFiltered: true
+                },
+                {
+                    question: "What do you offer?",
+                    answer: "How Much Does a Project Cost?\n\nInvestment Levels Based on Project Complexity:\n\n🚀 Simple Projects: $2,500 - $7,500",
+                    expectedFiltered: true
+                },
+                {
+                    question: "How much does it cost?",
+                    answer: "Different answer about pricing",
+                    expectedFiltered: false
+                }
+            ];
+            
+            let html = '<h4>Response Filtering Test Results:</h4>';
+            testCases.forEach((test, index) => {
+                const isFiltered = checkIfBadResponse(test.question, test.answer);
+                const status = isFiltered === test.expectedFiltered ? '✅' : '❌';
+                html += `
+                    <div class="bad-response">
+                        ${status} <strong>Test ${index + 1}:</strong><br>
+                        <strong>Q:</strong> "${test.question}"<br>
+                        <strong>Filtered:</strong> ${isFiltered} (expected: ${test.expectedFiltered})
+                    </div>
+                `;
+            });
+            
+            document.getElementById('filterResult').innerHTML = html;
+        }
+        
+        function showBadResponses() {
+            const badResponses = JSON.parse(localStorage.getItem('devvibe-bad-responses') || '[]');
+            
+            if (badResponses.length === 0) {
+                document.getElementById('badResponsesList').innerHTML = 
+                    '<div>No bad responses found in storage</div>';
+                return;
+            }
+            
+            let html = `<h4>Found ${badResponses.length} bad responses:</h4>`;
+            badResponses.forEach((bad, index) => {
+                html += `
+                    <div class="bad-response">
+                        <strong>#${index + 1}</strong> (${bad.rating}/5 stars)<br>
+                        <strong>Q:</strong> ${bad.question}<br>
+                        <strong>A:</strong> ${bad.answer.substring(0, 100)}...<br>
+                        <small>Added: ${new Date(bad.timestamp).toLocaleString()}</small>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('badResponsesList').innerHTML = html;
+        }
+        
+        function clearBadResponses() {
+            localStorage.removeItem('devvibe-bad-responses');
+            document.getElementById('clearResult').innerHTML = 
+                '<div class="success">✅ Cleared all bad responses</div>';
+            document.getElementById('badResponsesList').innerHTML = '';
+        }
+        
+        // Auto-show existing bad responses on load
+        window.addEventListener('load', showBadResponses);
+    </script>
+</body>
+</html>

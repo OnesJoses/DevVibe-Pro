@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { AdminGuard } from '@/components/AdminGuard'
 import { useAuthStore } from '@/hooks/useAuthStore'
 import { useNavigate } from 'react-router-dom'
 
@@ -44,7 +45,12 @@ export default function SettingsPage() {
               <option value="fr">French</option>
             </select>
           </div>
-          <Button onClick={() => navigate('/profile')} variant="outline">Back to Profile</Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate('/profile')} variant="outline">Back to Profile</Button>
+            <AdminGuard fallback={null}>
+              <Button onClick={() => navigate('/knowledge')}>Open Knowledge Manager</Button>
+            </AdminGuard>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Link } from 'react-router-dom'
 import { Search, Code, Globe, Palette, BookOpen, HelpCircle, Lightbulb, Brain, Zap, TrendingUp } from 'lucide-react'
-import { EnhancedLocalKnowledgeBase } from '@/lib/enhanced-knowledge-base'
+import { enhancedKnowledgeBase } from '@/lib/enhanced-knowledge-base'
 
 // Initialize the enhanced knowledge base
-const knowledgeBase = new EnhancedLocalKnowledgeBase()
+const knowledgeBase = enhancedKnowledgeBase
 
 export default function AIPage() {
   const [input, setInput] = useState('')
@@ -35,13 +35,9 @@ What would you like to explore?`
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<any>(null)
 
-  // Initialize knowledge base on component mount
+  // Get stats on component mount
   useEffect(() => {
-    const initKB = async () => {
-      await knowledgeBase.initialize()
-      setStats(knowledgeBase.getStats())
-    }
-    initKB()
+    setStats(knowledgeBase.getStats())
   }, [])
 
   async function handleSubmit(e?: React.FormEvent) {
@@ -54,47 +50,28 @@ What would you like to explore?`
     setLoading(true)
 
     try {
-      // Use enhanced search with semantic understanding
-      const results = await knowledgeBase.search(query, { maxResults: 1, threshold: 0.2 })
+      // Use the new enhancedSearch method
+      const results = await knowledgeBase.enhancedSearch(query)
       
-      let response
-      if (results.length > 0) {
-        const bestResult = results[0]
-        response = {
-          role: 'assistant' as const,
-          title: `${bestResult.entry.title} (${Math.round(bestResult.relevance * 100)}% match)`,
-          content: bestResult.entry.content,
-          relevance: bestResult.relevance,
-          matchType: bestResult.matchType,
-          matchedTerms: bestResult.matchedTerms
-        }
-      } else {
-        // Use fallback response
-        const fallback = knowledgeBase.getFallbackResponse()
-        response = {
-          role: 'assistant' as const,
-          title: fallback.entry.title,
-          content: fallback.entry.content,
-          relevance: fallback.relevance,
-          matchType: fallback.matchType,
-          matchedTerms: fallback.matchedTerms
-        }
+      const response = {
+        role: 'assistant' as const,
+        title: `AI Response (Confidence: ${results.confidence}%)`,
+        content: results.answer,
+        // Optionally display sources
+        sources: results.sources 
       }
 
-      // Simulate brief processing time for better UX
-      setTimeout(() => {
-        setMessages(prev => [...prev, response])
-        setStats(knowledgeBase.getStats())
-        setLoading(false)
-      }, 800)
+      setMessages(prev => [...prev, response])
+      setStats(knowledgeBase.getStats())
 
     } catch (error) {
       console.error('Search error:', error)
       setMessages(prev => [...prev, {
         role: 'assistant',
         title: 'Search Error',
-        content: 'I encountered an issue processing your question. Please try rephrasing your query or ask about my services, tech stack, or pricing.'
+        content: 'I encountered an issue processing your question. Please try rephrasing your query.'
       }])
+    } finally {
       setLoading(false)
     }
   }

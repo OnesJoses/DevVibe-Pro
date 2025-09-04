@@ -1,0 +1,177 @@
+[
+  {
+    "title": "Welcome",
+    "content": "Welcome! I'm here to help with projects, questions, and planning. What would you like to explore?",
+    "keywords": ["welcome", "intro", "start"]
+  },
+  {
+    "title": "Good night",
+    "content": "Good night! Wishing you a restful evening. If you need anything, I'm here when you return.",
+    "keywords": ["greeting", "night", "farewell"]
+  },
+  {
+    "title": "What services do you offer?",
+    "content": "I offer custom web and mobile development, AI integration, automation, UX design, consulting, and ongoing maintenance.",
+    "keywords": ["services", "offer", "capabilities"]
+  },
+  {
+    "title": "What is your development process?",
+    "content": "Discovery → Planning → Design → Development → Testing → Launch → Support. Clear milestones and regular updates at each stage.",
+    "keywords": ["process", "steps", "workflow"]
+  },
+  {
+    "title": "Do you sign NDAs?",
+    "content": "Yes. I can sign your NDA or provide a standard mutual NDA to protect confidential information before discussions begin.",
+    "keywords": ["nda", "confidentiality", "agreement"]
+  },
+  {
+    "title": "What are your payment terms?",
+    "content": "Typical terms: 30–40% upfront, milestone-based payments, and final payment upon delivery. Flexible options available for retainers.",
+    "keywords": ["payment", "terms", "milestones"]
+  },
+  {
+    "title": "Do you provide estimates?",
+    "content": "Yes. After a short discovery call, I provide a scope outline, timeline range, and detailed cost estimate with assumptions.",
+    "keywords": ["estimate", "pricing", "quote"]
+  },
+  {
+    "title": "What technologies do you use?",
+    "content": "Main stack: React, TypeScript, Node.js, Python, PostgreSQL, Tailwind, and cloud-native tooling when required.",
+    "keywords": ["stack", "technology", "tools"]
+  },
+  {
+    "title": "Do you offer maintenance plans?",
+    "content": "Yes. Tiered plans include updates, security patches, backups, monitoring, and small enhancements each month.",
+    "keywords": ["maintenance", "plan", "support"]
+  },
+  {
+    "title": "Who owns the code?",
+    "content": "Upon payment, you own the delivered code and IP. I provide repository access and a clean handover.",
+    "keywords": ["ownership", "ip", "code"]
+  },
+  {
+    "title": "How do we communicate?",
+    "content": "We use your preferred tools (email, Slack, Teams) with weekly check-ins, progress demos, and transparent tracking.",
+    "keywords": ["communication", "updates", "meetings"]
+  },
+  {
+    "title": "What is your revision policy?",
+    "content": "I include revisions within scope during design and development phases. Changes beyond scope are handled as change requests.",
+    "keywords": ["revisions", "scope", "changes"]
+  },
+  {
+    "title": "Can you do an MVP first?",
+    "content": "Absolutely. We can prioritize core features, launch an MVP fast, and iterate based on real user feedback.",
+    "keywords": ["mvp", "iteration", "launch"]
+  },
+  {
+    "title": "How do you handle scalability?",
+    "content": "I design with horizontal scaling, caching, optimized queries, and observability to support growth without regressions.",
+    "keywords": ["scalability", "performance", "growth"]
+  },
+  {
+    "title": "Can you migrate existing data?",
+    "content": "Yes. I plan safe migrations with mapping, backups, validation scripts, and staged cutovers to minimize risk.",
+    "keywords": ["migration", "data", "cutover"]
+  },
+  {
+    "title": "Which CMS do you recommend?",
+    "content": "Depends on needs. Options include headless (e.g., Strapi), WordPress for content-heavy sites, or custom CMS for special workflows.",
+    "keywords": ["cms", "content", "headless"]
+  },
+  {
+    "title": "Do you offer SEO setup?",
+    "content": "Yes. Technical SEO basics: meta tags, sitemaps, clean URLs, performance improvements, and analytics integration.",
+    "keywords": ["seo", "optimization", "traffic"]
+  },
+  {
+    "title": "Is the app accessible?",
+    "content": "I follow WCAG guidelines, semantic HTML, keyboard navigation, ARIA roles, and color contrast best practices.",
+    "keywords": ["accessibility", "wcag", "a11y"]
+  },
+  {
+    "title": "Do you set performance budgets?",
+    "content": "Yes. I define target load times, bundle sizes, Core Web Vitals, and monitor regressions with CI checks.",
+    "keywords": ["performance", "budgets", "vitals"]
+  },
+  {
+    "title": "Do you integrate analytics?",
+    "content": "Yes. Privacy-friendly analytics with dashboards for traffic, conversions, funnels, and event tracking.",
+    "keywords": ["analytics", "tracking", "metrics"]
+  },
+  {
+    "title": "Can we A/B test features?",
+    "content": "Yes. I can implement experiments with feature flags, cohorts, and statistical evaluation to guide decisions.",
+    "keywords": ["ab testing", "experiments", "flags"]
+  },
+  {
+    "title": "Do you perform security audits?",
+    "content": "I review auth flows, input validation, secrets handling, dependencies, and apply best practices with periodic scans.",
+    "keywords": ["security", "audit", "vulnerabilities"]
+  },
+  {
+    "title": "What about privacy compliance?",
+    "content": "I help with consent flows, data retention, subject requests, and documentation aligned with GDPR principles.",
+    "keywords": ["privacy", "gdpr", "consent"]
+  },
+  {
+    "title": "Which integrations can you add?",
+    "content": "Payments, email, CRM, maps, auth providers, search, storage, and custom APIs—based on your stack and goals.",
+    "keywords": ["integrations", "api", "payments"]
+  },
+  {
+    "title": "How do you manage rate limits?",
+    "content": "Through caching, backoff strategies, queuing, and observability to prevent timeouts and degraded UX.",
+    "keywords": ["rate limiting", "caching", "retries"]
+  },
+  {
+    "title": "Do you set up caching?",
+    "content": "Yes. CDN and application-level caching (HTTP, Redis) to reduce latency and improve reliability.",
+    "keywords": ["caching", "cdn", "redis"]
+  },
+  {
+    "title": "What is your backup policy?",
+    "content": "Automated backups, tested restores, versioned snapshots, and clear RPO/RTO targets for resilience.",
+    "keywords": ["backup", "restore", "rpo rto"]
+  },
+  {
+    "title": "Do you monitor apps in production?",
+    "content": "Yes. I configure logs, metrics, tracing, and alerts so we can react quickly and prevent issues.",
+    "keywords": ["monitoring", "alerts", "observability"]
+  },
+  {
+    "title": "What is your incident response?",
+    "content": "Defined severity levels, on-call escalation, comms templates, postmortems, and corrective actions.",
+    "keywords": ["incident", "on-call", "postmortem"]
+  },
+  {
+    "title": "Do you provide documentation?",
+    "content": "Yes. Setup guides, architecture notes, API docs, admin manuals, and runbooks are included.",
+    "keywords": ["documentation", "guides", "api docs"]
+  },
+  {
+    "title": "Can you train our team?",
+    "content": "Yes. Workshops, handover sessions, and recorded walkthroughs tailored to your stack and workflows.",
+    "keywords": ["training", "workshop", "handover"]
+  },
+  {
+    "title": "What’s included in handover?",
+    "content": "Repo access, environment configs, credentials transfer, deployment docs, and success criteria review.",
+    "keywords": ["handover", "checklist", "deliverables"]
+  },
+  {
+    "title": "How do you measure success?",
+    "content": "We define KPIs—time-to-value, conversion, retention, performance—and track them after launch.",
+    "keywords": ["kpi", "metrics", "success"]
+  },
+  {
+    "title": "How do you handle change requests?",
+    "content": "We document the request, estimate impact, adjust the plan, and confirm timelines and cost before proceeding.",
+    "keywords": ["change request", "scope", "process"]
+  },
+  {
+    "title": "How do you manage risks?",
+    "content": "Identify early, track openly, mitigate with prototypes, phased releases, and frequent feedback loops.",
+    "keywords": ["risk", "mitigation", "planning"]
+  }
+]

@@ -289,6 +289,59 @@ Python's simplicity and powerful ecosystem make it ideal for everything from web
           relevance: 0.96,
           source: 'Enhanced Content Database'
         }
+      ],
+
+      'database': [
+        {
+          title: 'Modern Database Technologies - SQL, NoSQL & Best Practices',
+          url: 'https://www.postgresql.org/docs/',
+          snippet: `Comprehensive database solutions for scalable applications:
+
+🗄️ SQL Databases (ACID Compliance):
+• PostgreSQL: Advanced open-source relational database with JSON support
+• MySQL: Popular, fast, and reliable for web applications
+• SQLite: Lightweight, embedded database perfect for smaller applications
+• MariaDB: Enhanced MySQL fork with improved performance features
+
+🌐 NoSQL Databases (Horizontal Scaling):
+• MongoDB: Document-based database with flexible schema design
+• Redis: In-memory key-value store for caching and session management
+• Cassandra: Wide-column database for high-availability applications
+• DynamoDB: AWS managed NoSQL for serverless applications
+
+⚡ Performance Optimization:
+• Database Indexing: B-tree, hash, and composite indexes for query speed
+• Query Optimization: EXPLAIN plans and query rewriting techniques
+• Connection Pooling: Efficient database connection management
+• Read Replicas: Distribute read operations across multiple instances
+• Caching Strategies: Redis/Memcached for frequently accessed data
+
+🏗️ Database Design Patterns:
+• Normalization: Reduce data redundancy with proper table relationships
+• Denormalization: Strategic data duplication for read performance
+• Sharding: Horizontal partitioning for massive scale applications
+• CQRS: Command Query Responsibility Segregation for complex domains
+• Event Sourcing: Store state changes as events for audit trails
+
+🔒 Security & Backup:
+• Encryption at rest and in transit for sensitive data protection
+• Role-based access control (RBAC) for fine-grained permissions
+• Regular automated backups with point-in-time recovery
+• SQL injection prevention through parameterized queries
+• Database monitoring and alerting for proactive issue detection
+
+🛠️ Modern Tools & ORMs:
+• Prisma: Type-safe database toolkit with auto-generated clients
+• TypeORM: Decorators and Active Record pattern for TypeScript
+• Sequelize: Promise-based Node.js ORM for SQL databases
+• Mongoose: Elegant MongoDB object modeling for Node.js
+• Django ORM: Python's powerful database abstraction layer
+
+Database selection depends on your specific use case: SQL for complex relationships, NoSQL for flexibility and scale.`,
+          displayUrl: 'postgresql.org',
+          relevance: 0.95,
+          source: 'Enhanced Content Database'
+        }
       ]
     }
 

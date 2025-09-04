@@ -1,15 +1,161 @@
 import { useMemo, useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Badge } from '../components/ui/badge'
 import { Link } from 'react-router-dom'
-import { Search, Code, Globe, Palette, BookOpen, HelpCircle, Lightbulb, Brain, Zap, TrendingUp, Wifi, WifiOff } from 'lucide-react'
-import { smartKnowledgeBase } from '@/lib/smart-knowledge-base'
+import { Search, Brain, Zap, Wifi, WifiOff, ThumbsUp, ThumbsDown, Send, Database, Cloud } from 'lucide-react'
+import { AdminGuard } from '../components/AdminGuard'
+import { PersistenceStatus } from '../components/PersistenceStatus'
+import { smartKnowledgeBase, smartSearch } from '../lib/smart-knowledge-base'
+import { aiComprehension } from '../lib/ai-comprehension'
+import { aiLearning } from '../lib/ai-learning'
+import { seedLearningSystem } from '../lib/ai-training-data'
+import { enhancedAI } from '../lib/enhanced-intelligent-ai'
+import { vectorKnowledge } from '../lib/vector-knowledge-engine'
+import { persistentStorage } from '../lib/persistent-storage-engine'
 
 // Initialize the smart knowledge base
 const knowledgeBase = smartKnowledgeBase
+
+// Enhanced Training Insights Component with ChromaDB integration
+function TrainingInsights() {
+  const [insights, setInsights] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [chromaStatus, setChromaStatus] = useState<boolean>(false)
+
+  useEffect(() => {
+    async function loadInsights() {
+      try {
+        const data = await enhancedAI.getLearningInsights()
+        setInsights(data)
+        setChromaStatus(data.performance.chromaDBActive)
+      } catch (error) {
+        console.error('Failed to load insights:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadInsights()
+  }, [])
+
+  if (loading) return <div className="text-center py-4">Loading enhanced AI insights...</div>
+
+  if (!insights) return <div className="text-center py-4 text-red-600">Unable to load training insights</div>
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-4">
+        <h3 className="text-lg font-semibold">🧠 Enhanced AI Learning Dashboard</h3>
+        <div className="flex items-center gap-1">
+          {chromaStatus ? (
+            <><Database className="w-4 h-4 text-green-600" /><span className="text-xs text-green-600">ChromaDB Active</span></>
+          ) : (
+            <><Database className="w-4 h-4 text-orange-600" /><span className="text-xs text-orange-600">Local Fallback</span></>
+          )}
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h4 className="font-medium text-blue-900 flex items-center gap-1">
+            <Cloud className="w-4 h-4" />
+            ChromaDB Knowledge
+          </h4>
+          <p className="text-2xl font-bold text-blue-600">{insights.chromaDB.totalDocuments}</p>
+          <p className="text-sm text-blue-700">Stored Documents</p>
+        </div>
+        
+        <div className="bg-green-50 p-4 rounded-lg">
+          <h4 className="font-medium text-green-900 flex items-center gap-1">
+            <Brain className="w-4 h-4" />
+            Local Storage
+          </h4>
+          <p className="text-2xl font-bold text-green-600">{insights.storage.totalConversations}</p>
+          <p className="text-sm text-green-700">Conversations</p>
+        </div>
+        
+        <div className="bg-purple-50 p-4 rounded-lg">
+          <h4 className="font-medium text-purple-900 flex items-center gap-1">
+            <Wifi className="w-4 h-4" />
+            Web Learning
+          </h4>
+          <p className="text-2xl font-bold text-purple-600">{insights.web.totalConcepts}</p>
+          <p className="text-sm text-purple-700">Web Concepts</p>
+        </div>
+        
+        <div className="bg-orange-50 p-4 rounded-lg">
+          <h4 className="font-medium text-orange-900 flex items-center gap-1">
+            <Zap className="w-4 h-4" />
+            Performance
+          </h4>
+          <p className="text-2xl font-bold text-orange-600">{(insights.storage.averageConfidence * 100).toFixed(0)}%</p>
+          <p className="text-sm text-orange-700">Confidence</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h4 className="font-medium mb-3">📊 Knowledge Categories</h4>
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {Object.entries(insights.chromaDB.categories).map(([category, count]: [string, any]) => (
+              <div key={category} className="flex justify-between items-center bg-gray-50 px-3 py-2 rounded">
+                <span className="capitalize">{category.replace('_', ' ')}</span>
+                <span className="font-medium">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-medium mb-3">🆕 Recent Learning</h4>
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {insights.storage.recentLearning.slice(0, 5).map((item: any, index: number) => (
+              <div key={index} className="bg-gray-50 p-3 rounded text-sm">
+                <div className="font-medium flex items-center gap-1">
+                  {item.type === 'conversation' && <Brain className="w-3 h-3" />}
+                  {item.type === 'concept' && <Zap className="w-3 h-3" />}
+                  {item.type}
+                </div>
+                <div className="text-gray-600">{new Date(item.metadata.created).toLocaleDateString()}</div>
+                {item.content.question && (
+                  <div className="text-gray-700 mt-1">{item.content.question.substring(0, 80)}...</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="font-medium mb-2">⚡ System Performance</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span className="text-gray-600">Learning Rate:</span>
+            <div className="font-medium">{insights.performance.learningRate.toFixed(2)} conv/hr</div>
+          </div>
+          <div>
+            <span className="text-gray-600">Memory Usage:</span>
+            <div className="font-medium">{insights.performance.memoryUsage}</div>
+          </div>
+          <div>
+            <span className="text-gray-600">ChromaDB Recent:</span>
+            <div className="font-medium">{insights.chromaDB.recentAdditions} docs</div>
+          </div>
+          <div>
+            <span className="text-gray-600">Web Cache:</span>
+            <div className="font-medium">{insights.web.cacheSize} queries</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Persistence Status Component */}
+      <PersistenceStatus />
+    </div>
+  )
+}
 
 export default function AIPage() {
   const [input, setInput] = useState('')
@@ -27,64 +173,72 @@ export default function AIPage() {
   }[]>([
     { 
       role: 'assistant', 
-      title: 'Intelligent AI Project Assistant 🧠✨',
-      content: `Welcome! I'm your intelligent project guide with comprehensive knowledge and smart information retrieval.
+      title: 'Welcome! 👋',
+      content: `Hi! I'm here to help with your development questions and project needs.
 
-**🚀 What I Can Help With:**
-- **Personal Questions** - Instant answers about my services, experience, and approach  
-- **Technical Guidance** - Detailed explanations on development topics and best practices
-- **Current Information** - Up-to-date insights on technology trends and solutions
-- **Project Planning** - Strategic advice for your development needs
+**I can help you with:**
+- Service questions and pricing
+- Technical guidance and best practices  
+- Project planning and recommendations
+- Development process questions
 
-**🎯 Smart Features:**
-- **Intelligent Routing** - Automatically finds the best information source for your question
-- **Comprehensive Answers** - Combines expertise with current data for complete responses
-- **Source Transparency** - Shows exactly where information comes from
-- **Contextual Responses** - Tailored answers based on your specific needs
-- **Smart Routing** - Automatically chooses the best information source
-- **Hybrid Intelligence** - Combines personal knowledge with curated tech data
-- **Source Transparency** - Shows exactly where information comes from
+**Popular topics:**
+- "What services do you offer?"
+- "How much does a web app cost?"
+- "What's your development process?"
+- "React best practices"
+- "Your experience with [technology]"
 
-**🔍 Search Features:**
-- **Immediate Responses** for business and service questions
-- **Curated Tech Resources** for common development topics
-- **Structured Fallbacks** for reliable information
-- **Privacy-Focused** - no tracking or external API dependencies
-- **Always Available** - works without internet connectivity
-
-**💡 Try These Queries:**
-- **Personal**: "What services do you offer?" "Your development process?"
-- **Tech Topics**: "React best practices" "TypeScript fundamentals"
-- **Project Info**: "How much does a custom web app cost?" "Your tech stack?"
-- **Hybrid**: "How do you approach React development?" "Your experience with TypeScript"
-
-**🎯 Search Intelligence:**
-- Personal/business questions → Local expertise (instant, comprehensive)
-- Technical topics → Curated resources (reliable, structured)
-- Hybrid queries → Best of both sources
-
-Ready to search both my expertise AND the entire internet? Ask me anything!`
+What would you like to know?`
     }
   ])
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<any>(null)
   const [webSearchStatus, setWebSearchStatus] = useState<any>(null)
+  const [showTrainingInsights, setShowTrainingInsights] = useState(false)
 
-  // Feedback system for learning
-  const giveFeedback = (messageId: string, rating: number) => {
+  // Enhanced feedback system that actually improves the AI intelligence
+  // Enhanced feedback with full learning integration
+  const giveFeedback = async (messageId: string, rating: number) => {
     setMessages(prev => prev.map(msg => {
       if (msg.id === messageId) {
-        // Store the conversation for learning if rating is high
-        if (rating >= 4) {
-          const userMessage = prev.find(m => m.role === 'user' && prev.indexOf(m) === prev.indexOf(msg) - 1)
-          if (userMessage) {
-            // Save to knowledge base (this would integrate with your learning system)
-            console.log('🎓 Learning from conversation:', {
-              question: userMessage.content,
-              answer: msg.content,
+        // Find the corresponding user question
+        const userMessageIndex = prev.indexOf(msg) - 1
+        const userMessage = prev[userMessageIndex]
+        
+        if (userMessage && userMessage.role === 'user') {
+          // Learn from this interaction using enhanced AI system
+          enhancedAI.learnFromInteraction(
+            userMessage.content,
+            msg.content,
+            rating,
+            msg.metadata || {}
+          ).then(() => {
+            console.log(`✅ Enhanced learning completed (rating: ${rating}/5)`)
+            
+            if (rating >= 4) {
+              console.log('🎯 High-quality interaction stored in ChromaDB and IndexedDB')
+            } else if (rating <= 2) {
+              console.log('📝 Low-quality interaction noted - AI will improve similar responses')
+            }
+          }).catch(error => {
+            console.error('❌ Learning error:', error)
+          })
+          
+          // Also record in the legacy learning system for compatibility
+          if (rating >= 4) {
+            aiLearning.recordSuccess(
+              userMessage.content,
+              msg.content,
+              msg.metadata || {},
               rating
-            })
-            // You could call a learning API here
+            )
+          } else if (rating <= 2) {
+            aiLearning.recordFailure(
+              userMessage.content,
+              msg.content,
+              rating === 1 ? 'Response was not helpful' : 'Response needs improvement'
+            )
           }
         }
         
@@ -96,22 +250,6 @@ Ready to search both my expertise AND the entire internet? Ask me anything!`
       }
       return msg
     }))
-    
-    // Show learning notification
-    if (rating >= 4) {
-      setTimeout(() => {
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          id: Date.now().toString(),
-          content: rating === 5 ? 
-            "🎉 Excellent! I learned from this conversation and will use it to help future users! 🧠✨" :
-            "✅ Thank you for the positive feedback! This helps me improve! 😊",
-          title: 'AI Learning',
-          matchType: 'learning',
-          feedbackGiven: true
-        }])
-      }, 500)
-    }
   }
 
   // Try alternative response when user is not satisfied
@@ -294,6 +432,13 @@ Feel free to ask more specific questions, and I'll provide detailed, actionable 
       const kbStats = knowledgeBase.getStats()
       setStats(kbStats)
       
+      // Seed the learning system with initial training data (only once)
+      const hasSeeded = localStorage.getItem('ai-learning-seeded')
+      if (!hasSeeded) {
+        seedLearningSystem(aiLearning)
+        localStorage.setItem('ai-learning-seeded', 'true')
+      }
+      
       // Debug: Check what knowledge is actually loaded
       console.log('🔍 Knowledge Base Stats:', kbStats)
       
@@ -331,80 +476,65 @@ Feel free to ask more specific questions, and I'll provide detailed, actionable 
     const query = input.trim()
     if (!query) return
 
+    // Add user message
     setMessages(prev => [...prev, { role: 'user', content: query }])
     setInput('')
     setLoading(true)
 
     try {
-      // Use the smart search system that automatically chooses the best approach
-      const searchResult = await knowledgeBase.smartSearch(query, 5)
+      // Use the enhanced AI system with ChromaDB
+      console.log('🚀 Using Enhanced ChromaDB AI System for:', query)
+      const result = await enhancedAI.processQuery(query)
       
-      console.log('🔍 Smart search result:', searchResult)
+      console.log('🎯 Enhanced AI Result:', result)
       
-      // Create response message
+      // Show learning progress if new concepts were learned
+      if (result.newLearning.concepts.length > 0) {
+        console.log('🧠 New concepts learned:', result.newLearning.concepts)
+      }
+      
+      // Create enhanced response message with detailed metadata
       const response = {
         role: 'assistant' as const,
         id: Date.now().toString(),
-        title: `${searchResult.strategy} • ${searchResult.results.length} results`,
-        content: searchResult.results.length > 0 ? 
-          searchResult.results.map(result => {
-            let content = `**${result.title}**\n\n${result.content}`
-            if (result.url) {
-              content += `\n\n*Source: ${result.url}*`
-            }
-            return content
-          }).join('\n\n---\n\n') :
-          `I'd be happy to help with "${query}". Could you provide more context or try rephrasing your question?`,
-        relevance: searchResult.results[0]?.relevance || 0,
-        matchType: searchResult.strategy,
-        matchedTerms: searchResult.sources,
+        title: `Enhanced AI • ${(result.confidence * 100).toFixed(0)}% confidence • ${result.sources.join(', ')}`,
+        content: result.answer,
+        relevance: result.confidence,
+        matchType: result.metadata.intent?.type || 'general',
+        matchedTerms: result.metadata.intent?.keywords || [],
         feedbackGiven: false,
         metadata: {
-          strategy: searchResult.strategy,
-          sources: searchResult.sources,
-          searchTime: searchResult.searchTime,
-          resultCount: searchResult.results.length
+          ...result.metadata,
+          sources: result.sources,
+          newLearning: result.newLearning,
+          enhancedAI: true,
+          chromaDBUsed: result.metadata.chromaDBUsed,
+          webSearchPerformed: result.metadata.webSearchPerformed
         }
       }
 
-      // Show results after a brief delay for better UX
+      // Show results after processing
       setTimeout(() => {
         setMessages(prev => [...prev, response])
         setStats(knowledgeBase.getStats())
         setLoading(false)
-      }, Math.min(1500, searchResult.searchTime + 500))
+      }, 800) // Slightly longer delay to show processing
 
     } catch (error) {
-      console.error('❌ Search error:', error)
+      console.error('❌ Enhanced AI error:', error)
       setMessages(prev => [...prev, {
         role: 'assistant',
-        title: 'Search Error',
-        content: 'I encountered an issue processing your question. This might be due to network connectivity. Please try again or ask about my services and expertise for local information.',
+        id: Date.now().toString(),
+        title: 'Processing Error',
+        content: 'I had trouble processing that question. Could you try rephrasing it, or ask me something specific about my services, pricing, or technical approach?',
         relevance: 0,
         matchType: 'error',
-        matchedTerms: ['error']
+        matchedTerms: ['error'],
+        feedbackGiven: false
       }])
       setLoading(false)
     }
   }
-
-  const quickActions = useMemo(() => [
-    { icon: <Code className="h-4 w-4" />, text: 'What services do you offer?', category: 'Local Knowledge', color: 'bg-blue-50 hover:bg-blue-100 border-blue-200' },
-    { icon: <Globe className="h-4 w-4" />, text: 'Latest React 18 features and updates', category: 'Web Search', color: 'bg-green-50 hover:bg-green-100 border-green-200' },
-    { icon: <Palette className="h-4 w-4" />, text: 'How much does a custom web app cost?', category: 'Local Knowledge', color: 'bg-purple-50 hover:bg-purple-100 border-purple-200' },
-    { icon: <BookOpen className="h-4 w-4" />, text: 'Current web development trends 2024', category: 'Web Search', color: 'bg-orange-50 hover:bg-orange-100 border-orange-200' },
-    { icon: <HelpCircle className="h-4 w-4" />, text: 'How do we get started working together?', category: 'Local Knowledge', color: 'bg-pink-50 hover:bg-pink-100 border-pink-200' },
-    { icon: <Lightbulb className="h-4 w-4" />, text: 'Best practices for Node.js security', category: 'Web Search', color: 'bg-yellow-50 hover:bg-yellow-100 border-yellow-200' }
-  ], [])
-
-  const advancedQueries = useMemo(() => [
-    "Compare React vs Vue.js performance in 2024",
-    "ROI timeline for e-commerce vs SaaS development", 
-    "How do you ensure GDPR compliance in web apps?",
-    "Latest TypeScript features and best practices",
-    "Performance optimization for high-traffic websites",
-    "Modern authentication methods for web applications"
-  ], [])
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -462,13 +592,8 @@ Feel free to ask more specific questions, and I'll provide detailed, actionable 
                   }`}>
                     {message.title && (
                       <div className="font-semibold text-blue-600 mb-3 flex items-center gap-2 flex-wrap">
-                        <Lightbulb className="h-4 w-4" />
+                        <Brain className="h-4 w-4" />
                         {message.title}
-                        {message.relevance && (
-                          <Badge variant="secondary" className="ml-2 text-xs">
-                            {message.matchType} • {Math.round(message.relevance * 100)}%
-                          </Badge>
-                        )}
                         {message.metadata?.searchStrategy && (
                           <Badge 
                             variant={
@@ -527,67 +652,38 @@ Feel free to ask more specific questions, and I'll provide detailed, actionable 
                         </div>
                       </div>
                     )}
-                    {message.metadata && (
-                      <div className="mt-3 pt-2 border-t border-slate-100 space-y-1">
-                        {message.metadata.searchTime && (
-                          <div className="text-xs text-slate-500">
-                            ⚡ Search completed in {message.metadata.searchTime}ms
-                          </div>
-                        )}
-                        {message.metadata.webProvider && (
-                          <div className="text-xs text-slate-500">
-                            🌐 Web search via {message.metadata.webProvider}
-                          </div>
-                        )}
-                        {message.metadata.totalResults && (
-                          <div className="text-xs text-slate-500">
-                            📊 {message.metadata.totalResults} total results found
-                          </div>
-                        )}
-                        {message.metadata.reasoning && (
-                          <div className="text-xs text-slate-400 italic">
-                            🧠 {message.metadata.reasoning}
-                          </div>
-                        )}
-                      </div>
-                    )}
                     
-                    {/* Rating System for AI Learning */}
+                    {/* Enhanced Feedback System for AI Learning */}
                     {message.role === 'assistant' && message.id && !message.feedbackGiven && message.matchType !== 'learning' && (
                       <div className="mt-4 pt-3 border-t border-slate-100">
-                        <div className="text-sm font-medium text-slate-700 mb-2">Was this helpful? 🤔</div>
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="text-sm text-slate-600 mb-2">Help improve AI responses:</div>
+                        <div className="flex gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-green-600 border-green-300 hover:bg-green-50"
+                            className="text-green-600 border-green-300 hover:bg-green-50 flex items-center gap-1"
                             onClick={() => giveFeedback(message.id!, 5)}
                           >
-                            😊 Perfect!
+                            <ThumbsUp className="h-3 w-3" />
+                            Excellent
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-blue-600 border-blue-300 hover:bg-blue-50"
-                            onClick={() => giveFeedback(message.id!, 4)}
+                            className="text-blue-600 border-blue-300 hover:bg-blue-50 flex items-center gap-1"
+                            onClick={() => giveFeedback(message.id!, 3)}
                           >
-                            👍 Good
+                            <ThumbsUp className="h-3 w-3" />
+                            Good
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-orange-600 border-orange-300 hover:bg-orange-50"
-                            onClick={() => tryAlternativeResponse(message.id!)}
-                          >
-                            🔄 Try different answer
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-red-600 border-red-300 hover:bg-red-50"
+                            className="text-red-600 border-red-300 hover:bg-red-50 flex items-center gap-1"
                             onClick={() => giveFeedback(message.id!, 1)}
                           >
-                            😞 Not helpful
+                            <ThumbsDown className="h-3 w-3" />
+                            Needs work
                           </Button>
                         </div>
                       </div>
@@ -597,8 +693,7 @@ Feel free to ask more specific questions, and I'll provide detailed, actionable 
                     {message.feedbackGiven && message.rating && (
                       <div className="mt-3 pt-2 border-t border-slate-100">
                         <div className="text-xs text-slate-500">
-                          ✅ Feedback received: {message.rating}/5 stars
-                          {message.rating >= 4 && " - This response will help future users!"}
+                          {message.rating >= 4 ? "Feedback received" : "Ty"}
                         </div>
                       </div>
                     )}
@@ -656,57 +751,48 @@ Feel free to ask more specific questions, and I'll provide detailed, actionable 
                   )}
                 </Button>
               </div>
-
-              {/* Quick Actions */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
-                  <TrendingUp className="h-4 w-4" />
-                  Popular Questions:
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {quickActions.map((action, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      className={`justify-start p-3 h-auto text-left ${action.color} transition-all duration-200`}
-                      onClick={() => setInput(action.text)}
-                    >
-                      <div className="flex items-center gap-3">
-                        {action.icon}
-                        <div>
-                          <div className="text-xs font-medium">{action.text}</div>
-                          <div className="text-xs opacity-60">{action.category}</div>
-                        </div>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Advanced Queries */}
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-slate-600">💡 Try these advanced queries:</div>
-                <div className="flex flex-wrap gap-2">
-                  {advancedQueries.map((query, index) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-slate-50 hover:border-slate-400 transition-colors text-xs p-2"
-                      onClick={() => setInput(query)}
-                    >
-                      {query}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
             </form>
+
+            {/* AI Training Insights Panel */}
+            {showTrainingInsights && (
+              <AdminGuard>
+                <div className="mt-4 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                      <Brain className="h-4 w-4" />
+                      AI Training Insights
+                    </h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowTrainingInsights(false)}
+                      className="h-6 w-6 p-0"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                  <TrainingInsights />
+                </div>
+              </AdminGuard>
+            )}
 
             {/* Footer */}
             <div className="flex justify-between items-center pt-4 border-t border-slate-200">
-              <div className="text-xs text-slate-500 flex items-center gap-2">
-                <Brain className="h-4 w-4" />
-                Enhanced local AI • Semantic search • Privacy-focused
+              <div className="flex items-center gap-4">
+                <div className="text-xs text-slate-500 flex items-center gap-2">
+                  <Brain className="h-4 w-4" />
+                  Enhanced AI • Learning System • Privacy-focused
+                </div>
+                <AdminGuard fallback={null}>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowTrainingInsights(!showTrainingInsights)}
+                    className="text-xs"
+                  >
+                    Training Insights
+                  </Button>
+                </AdminGuard>
               </div>
               <Link 
                 to="/" 

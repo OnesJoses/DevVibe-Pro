@@ -1,0 +1,12 @@
+[
+  {
+    "title": "Hello Test",
+    "content": "Hello there! This is a test import to PostgreSQL.",
+    "keywords": ["greeting", "hello", "test"]
+  },
+  {
+    "title": "Welcome Test", 
+    "content": "Welcome to the PostgreSQL-powered AI system!",
+    "keywords": ["welcome", "test", "postgres"]
+  }
+]

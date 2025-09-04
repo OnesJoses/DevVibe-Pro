@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud-Powered AI Knowledge Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .cloud-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-connected { background: #4ade80; }
+        .status-local { background: #fbbf24; }
+        .status-error { background: #ef4444; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .chat-container {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f9fafb;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: #3b82f6;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .ai-message {
+            background: white;
+            border: 1px solid #e5e7eb;
+            margin-right: auto;
+        }
+
+        .message-meta {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: #3b82f6;
+        }
+
+        .send-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .send-btn:hover {
+            background: #2563eb;
+        }
+
+        .send-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .rating-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .rating-btn {
+            background: none;
+            border: 1px solid #e5e7eb;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.2s;
+        }
+
+        .rating-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .rating-excellent { border-color: #10b981; color: #10b981; }
+        .rating-good { border-color: #3b82f6; color: #3b82f6; }
+        .rating-retry { border-color: #f59e0b; color: #f59e0b; }
+        .rating-bad { border-color: #ef4444; color: #ef4444; }
+
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: white;
+            border: 1px solid #e5e7eb;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .danger-btn {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
+        .danger-btn:hover {
+            background: #fecaca;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☁️ Cloud-Powered AI</h1>
+            <p>Persistent Knowledge Management with Google Cloud Storage</p>
+            <div class="cloud-status" id="cloudStatus">
+                <div class="status-dot status-local" id="statusDot"></div>
+                <span id="statusText">Connecting to cloud...</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Stats Panel -->
+            <div class="stats-panel" id="statsPanel">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalQueries">0</div>
+                    <div class="stat-label">Total Queries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="excellentResponses">0</div>
+                    <div class="stat-label">Excellent Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="blockedResponses">0</div>
+                    <div class="stat-label">Blocked Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="storageUsed">0 KB</div>
+                    <div class="stat-label">Cloud Storage Used</div>
+                </div>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="chat-container" id="chatContainer">
+                <div class="ai-message">
+                    <div>👋 Hello! I'm your cloud-powered AI assistant. I can help with development questions, pricing, and technical guidance.</div>
+                    <div class="message-meta">Powered by Google Cloud Storage for persistent learning</div>
+                </div>
+            </div>
+
+            <!-- Input -->
+            <div class="input-container">
+                <input 
+                    type="text" 
+                    class="input-field" 
+                    id="messageInput" 
+                    placeholder="Ask me about services, pricing, web development..."
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="control-btn" onclick="getCloudStats()">📊 Refresh Stats</button>
+                <button class="control-btn" onclick="backupData()">💾 Backup Data</button>
+                <button class="control-btn" onclick="testConnection()">🔗 Test Connection</button>
+                <button class="control-btn danger-btn" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Cloud AI System (for demo purposes)
+        // In real implementation, this would import your actual cloud system
+        class MockCloudAI {
+            constructor() {
+                this.isCloudReady = false;
+                this.stats = {
+                    totalQueries: 0,
+                    excellentResponses: 0,
+                    blockedResponses: 0,
+                    storage: { totalSizeFormatted: '0 KB' }
+                };
+                this.conversations = [];
+                this.setTimeout(() => {
+                    this.isCloudReady = true;
+                    updateCloudStatus();
+                }, 2000);
+            }
+
+            setTimeout(fn, delay) {
+                return setTimeout(fn, delay);
+            }
+
+            async generateResponse(query) {
+                // Simulate cloud processing delay
+                await new Promise(resolve => this.setTimeout(resolve, 1000));
+                
+                this.stats.totalQueries++;
+                
+                const responses = {
+                    'services': `I offer comprehensive development services including:
+
+🔧 **Custom Development**
+• Web applications and websites
+• Mobile app development  
+• System integrations and APIs
+
+💡 **Consulting & Strategy**
+• Technical architecture planning
+• Code reviews and optimization
+• Technology stack recommendations
+
+🚀 **Digital Solutions**
+• E-commerce platforms
+• Business automation tools
+• Cloud-based applications
+
+☁️ **Cloud-Powered Features**
+• Google Cloud integrations
+• Scalable storage solutions
+• Real-time data synchronization
+
+All responses are now powered by Google Cloud for better persistence and learning across sessions. Would you like to know more about any specific service?`,
+
+                    'pricing': `Project pricing varies based on complexity and requirements:
+
+**Factors Affecting Cost** 💰
+• Project scope and features
+• Timeline requirements
+• Cloud infrastructure needs
+• Integration complexity
+
+**My Transparent Approach** 🤝
+• Free initial consultation
+• Detailed project breakdown
+• Cloud hosting cost estimates
+• No hidden fees policy
+
+**What's Always Included** ✅
+• Unlimited revisions until satisfied
+• Mobile-responsive design
+• Basic SEO optimization
+• Google Cloud setup (if needed)
+• Post-launch support period
+
+I'd be happy to discuss your specific needs and provide a detailed estimate. What type of project are you planning?`,
+
+                    'default': `I'm here to help with your development needs! 
+
+My cloud-powered AI system can assist with:
+• Technical questions and best practices
+• Project planning and cost estimates  
+• Service information and recommendations
+• Development strategy and guidance
+
+☁️ **Cloud-Powered Features:**
+• Your conversations are saved for better context
+• I learn from feedback across all sessions
+• Knowledge persists and improves over time
+
+To give you the most relevant information, could you tell me more about what you're trying to accomplish?`
+                };
+
+                const queryLower = query.toLowerCase();
+                let response;
+                
+                if (queryLower.includes('service') || queryLower.includes('offer')) {
+                    response = responses.services;
+                } else if (queryLower.includes('cost') || queryLower.includes('price') || queryLower.includes('much')) {
+                    response = responses.pricing;
+                } else {
+                    response = responses.default;
+                }
+
+                return {
+                    answer: response,
+                    source: this.isCloudReady ? 'cloud_generation' : 'local_fallback',
+                    confidence: 85,
+                    cloudPowered: this.isCloudReady
+                };
+            }
+
+            async saveFeedback(question, answer, rating) {
+                this.conversations.push({ question, answer, rating, timestamp: new Date() });
+                
+                if (rating === 5) {
+                    this.stats.excellentResponses++;
+                    return '⭐ Excellent! Saved to cloud for all users';
+                } else if (rating <= 2) {
+                    this.stats.blockedResponses++;
+                    return '🚫 Blocked in cloud! Will never repeat this response';
+                }
+                
+                return '📝 Feedback saved to cloud';
+            }
+
+            async getCloudStats() {
+                return {
+                    ...this.stats,
+                    cloudStatus: this.isCloudReady ? 'connected' : 'connecting',
+                    storage: {
+                        totalSizeFormatted: Math.floor(this.stats.totalQueries * 0.5) + ' KB'
+                    }
+                };
+            }
+
+            async clearAllData() {
+                this.stats = {
+                    totalQueries: 0,
+                    excellentResponses: 0,
+                    blockedResponses: 0,
+                    storage: { totalSizeFormatted: '0 KB' }
+                };
+                this.conversations = [];
+                return 'All cloud data cleared successfully';
+            }
+
+            async backupData() {
+                return 'Data backed up successfully to cloud';
+            }
+
+            getConnectionStatus() {
+                return { cloud: this.isCloudReady, fallback: !this.isCloudReady };
+            }
+        }
+
+        // Initialize mock AI (replace with real import in production)
+        const cloudAI = new MockCloudAI();
+        let messageCount = 0;
+
+        // Update cloud status indicator
+        function updateCloudStatus() {
+            const status = cloudAI.getConnectionStatus();
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            if (status.cloud) {
+                statusDot.className = 'status-dot status-connected';
+                statusText.textContent = 'Cloud Connected ✅';
+            } else {
+                statusDot.className = 'status-dot status-local';
+                statusText.textContent = 'Local Mode (Cloud Connecting...)';
+            }
+        }
+
+        // Handle key press for enter to send
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Send message function
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const chatContainer = document.getElementById('chatContainer');
+            
+            const message = input.value.trim();
+            if (!message) return;
+
+            // Disable input
+            input.disabled = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<div class="spinner"></div>';
+
+            // Add user message
+            const userMessageId = 'user-' + (++messageCount);
+            chatContainer.innerHTML += `
+                <div class="message user-message" id="${userMessageId}">
+                    <div>${message}</div>
+                    <div class="message-meta">You • ${new Date().toLocaleTimeString()}</div>
+                </div>
+            `;
+
+            // Clear input
+            input.value = '';
+
+            try {
+                // Get AI response
+                const response = await cloudAI.generateResponse(message);
+                
+                // Add AI message
+                const aiMessageId = 'ai-' + messageCount;
+                chatContainer.innerHTML += `
+                    <div class="message ai-message" id="${aiMessageId}">
+                        <div>${response.answer.replace(/\n/g, '<br>')}</div>
+                        <div class="message-meta">
+                            AI • ${response.source} • ${response.confidence}% confidence
+                            ${response.cloudPowered ? '☁️' : '💾'}
+                        </div>
+                        <div class="rating-container">
+                            <button class="rating-btn rating-excellent" onclick="giveRating('${aiMessageId}', '${message}', '${response.answer.replace(/'/g, "\\'")}', 5)">
+                                😊 Perfect! (Saves for all users)
+                            </button>
+                            <button class="rating-btn rating-good" onclick="giveRating('${aiMessageId}', '${message}', '${response.answer.replace(/'/g, "\\'")}', 4)">
+                                👍 Good (Will learn from this)
+                            </button>
+                            <button class="rating-btn rating-retry" onclick="giveRating('${aiMessageId}', '${message}', '${response.answer.replace(/'/g, "\\'")}', 3)">
+                                🔄 Try different answer
+                            </button>
+                            <button class="rating-btn rating-bad" onclick="giveRating('${aiMessageId}', '${message}', '${response.answer.replace(/'/g, "\\'")}', 1)">
+                                😞 Not helpful (Won't repeat)
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // Update stats
+                updateStats();
+
+            } catch (error) {
+                console.error('Error:', error);
+                chatContainer.innerHTML += `
+                    <div class="message ai-message">
+                        <div>❌ Sorry, I encountered an error processing your request. Please try again.</div>
+                        <div class="message-meta">Error • ${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+                input.focus();
+            }
+        }
+
+        // Give rating function
+        async function giveRating(messageId, question, answer, rating) {
+            const result = await cloudAI.saveFeedback(question, answer, rating);
+            
+            // Update the message to show feedback was given
+            const messageElement = document.getElementById(messageId);
+            const ratingContainer = messageElement.querySelector('.rating-container');
+            ratingContainer.innerHTML = `<div style="color: #10b981; font-size: 0.9em; margin-top: 10px;">✅ ${result}</div>`;
+
+            // Update stats
+            updateStats();
+
+            // Show feedback message
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML += `
+                <div class="message ai-message">
+                    <div>${result}</div>
+                    <div class="message-meta">Learning Feedback • ${new Date().toLocaleTimeString()}</div>
+                </div>
+            `;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Update stats display
+        async function updateStats() {
+            const stats = await cloudAI.getCloudStats();
+            
+            document.getElementById('totalQueries').textContent = stats.totalQueries || 0;
+            document.getElementById('excellentResponses').textContent = stats.excellentResponses || 0;
+            document.getElementById('blockedResponses').textContent = stats.blockedResponses || 0;
+            document.getElementById('storageUsed').textContent = stats.storage?.totalSizeFormatted || '0 KB';
+        }
+
+        // Control functions
+        async function getCloudStats() {
+            await updateStats();
+            alert('Stats refreshed from cloud!');
+        }
+
+        async function backupData() {
+            const result = await cloudAI.backupData();
+            alert(result);
+        }
+
+        async function testConnection() {
+            const status = cloudAI.getConnectionStatus();
+            alert(`Cloud: ${status.cloud ? 'Connected ✅' : 'Disconnected ❌'}\nFallback: ${status.fallback ? 'Active' : 'Inactive'}`);
+        }
+
+        async function clearAllData() {
+            if (confirm('Are you sure you want to clear all AI knowledge data? This cannot be undone.')) {
+                const result = await cloudAI.clearAllData();
+                alert(result);
+                
+                // Clear chat
+                document.getElementById('chatContainer').innerHTML = `
+                    <div class="ai-message">
+                        <div>🗑️ All data cleared! Starting fresh...</div>
+                        <div class="message-meta">System Reset • ${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+                
+                await updateStats();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCloudStatus();
+            updateStats();
+            
+            // Check cloud status periodically
+            setInterval(updateCloudStatus, 5000);
+        });
+    </script>
+</body>
+</html>

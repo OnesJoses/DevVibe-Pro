@@ -10,8 +10,10 @@ export interface KnowledgeEntry {
   metadata: {
     lastUpdated: string
     confidence: number
-    sourceType: 'manual' | 'learned' | 'generated'
+    sourceType: 'manual' | 'learned' | 'generated' | 'file'
     usage_count: number
+    filePath?: string
+    [key: string]: any
   }
 }
 

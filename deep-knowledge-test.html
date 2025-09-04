@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Manager Deep Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .warning { background: #fff3cd; color: #856404; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .test-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .entry-display {
+            background: #e9ecef;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Knowledge Manager Deep Test</h1>
+    <p>This tool will thoroughly test if the knowledge manager is actually saving and syncing data properly.</p>
+
+    <div class="test-section">
+        <h2>📊 Storage Analysis</h2>
+        <button onclick="analyzeStorage()">🔍 Analyze Current Storage</button>
+        <button onclick="clearAndTest()">🧪 Clear & Run Full Test</button>
+        <div id="storageAnalysis"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>✍️ Manual Entry Test</h2>
+        <p>Add a test entry and verify it saves correctly:</p>
+        <input type="text" id="testTitle" placeholder="Test Entry Title" value="My Test Service">
+        <textarea id="testContent" placeholder="Test Content">This is a test service that we offer to verify the knowledge system is working correctly.</textarea>
+        <select id="testCategory">
+            <option value="services">Services</option>
+            <option value="business">Business</option>
+            <option value="technical">Technical</option>
+        </select>
+        <input type="text" id="testKeywords" placeholder="Keywords" value="test, verification, service">
+        <br>
+        <button onclick="addTestEntry()">➕ Add Test Entry</button>
+        <button onclick="verifyLastEntry()">✅ Verify Last Entry</button>
+        <div id="entryTestResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🤖 AI Response Test</h2>
+        <p>Test if the AI can find and use the stored knowledge:</p>
+        <input type="text" id="aiTestQuery" placeholder="Ask about your test entry" value="What services do you offer?">
+        <button onclick="testAIResponse()">💬 Test AI Response</button>
+        <div id="aiResponseResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔄 Format Compatibility Test</h2>
+        <p>Check if the data format is compatible with the React app:</p>
+        <button onclick="testFormatCompatibility()">🔍 Check Format Compatibility</button>
+        <button onclick="convertToReactFormat()">🔄 Convert to React Format</button>
+        <div id="formatResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Raw Data View</h2>
+        <button onclick="showRawData()">👁️ Show Raw localStorage Data</button>
+        <div id="rawDataDisplay"></div>
+    </div>
+
+    <script>
+        // Test the exact same system as the knowledge manager
+        class TestKnowledgeManager {
+            constructor() {
+                this.storageKey = 'devvibe-ai-knowledge';
+                this.conversationKey = 'devvibe-conversations';
+            }
+
+            getKnowledge() {
+                const stored = localStorage.getItem(this.storageKey);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    return Array.isArray(parsed) ? parsed : (parsed.entries || []);
+                }
+                return [];
+            }
+
+            saveKnowledge(knowledge) {
+                const data = {
+                    entries: knowledge,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem(this.storageKey, JSON.stringify(data));
+            }
+
+            addEntry(entry) {
+                const knowledge = this.getKnowledge();
+                const newEntry = {
+                    id: entry.id || Date.now().toString(),
+                    title: entry.title,
+                    content: entry.content,
+                    category: entry.category,
+                    keywords: entry.keywords || [],
+                    embedding: null,
+                    metadata: {
+                        lastUpdated: new Date().toISOString(),
+                        confidence: 1.0,
+                        sourceType: entry.source || 'manual',
+                        usage_count: 0
+                    },
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                knowledge.push(newEntry);
+                this.saveKnowledge(knowledge);
+                return newEntry;
+            }
+
+            search(query) {
+                const knowledge = this.getKnowledge();
+                const queryLower = query.toLowerCase();
+                
+                return knowledge.filter(entry => {
+                    const titleMatch = entry.title.toLowerCase().includes(queryLower);
+                    const contentMatch = entry.content.toLowerCase().includes(queryLower);
+                    const keywordMatch = entry.keywords && entry.keywords.some(k => 
+                        k.toLowerCase().includes(queryLower)
+                    );
+                    return titleMatch || contentMatch || keywordMatch;
+                });
+            }
+        }
+
+        const testManager = new TestKnowledgeManager();
+
+        function analyzeStorage() {
+            const results = document.getElementById('storageAnalysis');
+            let html = '<h3>📊 Storage Analysis Results:</h3>';
+
+            const knowledgeData = localStorage.getItem('devvibe-ai-knowledge');
+            
+            if (knowledgeData) {
+                try {
+                    const parsed = JSON.parse(knowledgeData);
+                    const entries = Array.isArray(parsed) ? parsed : (parsed.entries || []);
+                    html += `<div class="success">✅ Knowledge data found: ${entries.length} entries</div>`;
+                    
+                    if (Array.isArray(parsed)) {
+                        html += `<div class="warning">⚠️ Using old array format</div>`;
+                    } else {
+                        html += `<div class="success">✅ Using new object format</div>`;
+                        html += `<div class="info">📅 Last updated: ${parsed.lastUpdated || 'Unknown'}</div>`;
+                    }
+
+                    entries.slice(0, 2).forEach((entry, index) => {
+                        html += `
+                            <div class="entry-display">
+                                <strong>${entry.title || 'Untitled'}</strong><br>
+                                <small>Category: ${entry.category || 'Unknown'}</small><br>
+                                <em>${(entry.content || '').substring(0, 150)}...</em>
+                            </div>
+                        `;
+                    });
+                } catch (e) {
+                    html += `<div class="error">❌ Error parsing: ${e.message}</div>`;
+                }
+            } else {
+                html += `<div class="warning">⚠️ No knowledge data found</div>`;
+            }
+
+            results.innerHTML = html;
+        }
+
+        function addTestEntry() {
+            const title = document.getElementById('testTitle').value.trim();
+            const content = document.getElementById('testContent').value.trim();
+            const category = document.getElementById('testCategory').value;
+            const keywords = document.getElementById('testKeywords').value.trim().split(',').map(k => k.trim());
+
+            if (!title || !content) {
+                document.getElementById('entryTestResults').innerHTML = 
+                    '<div class="error">❌ Please fill in title and content</div>';
+                return;
+            }
+
+            try {
+                const savedEntry = testManager.addEntry({
+                    title, content, category, keywords
+                });
+                
+                document.getElementById('entryTestResults').innerHTML = `
+                    <div class="success">✅ Entry added! ID: ${savedEntry.id}</div>
+                `;
+                
+                setTimeout(verifyLastEntry, 100);
+            } catch (error) {
+                document.getElementById('entryTestResults').innerHTML = 
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function verifyLastEntry() {
+            const knowledge = testManager.getKnowledge();
+            const lastEntry = knowledge[knowledge.length - 1];
+
+            if (lastEntry) {
+                document.getElementById('entryTestResults').innerHTML += `
+                    <div class="success">✅ Verification: Found "${lastEntry.title}"</div>
+                `;
+            } else {
+                document.getElementById('entryTestResults').innerHTML += 
+                    '<div class="error">❌ Verification failed</div>';
+            }
+        }
+
+        function testAIResponse() {
+            const query = document.getElementById('aiTestQuery').value.trim();
+            const results = testManager.search(query);
+            
+            let html = `<div class="info">🔍 Search for: "${query}"</div>`;
+            
+            if (results.length > 0) {
+                html += `<div class="success">✅ Found ${results.length} matching entries</div>`;
+                results.forEach(result => {
+                    html += `
+                        <div class="entry-display">
+                            <strong>${result.title}</strong><br>
+                            <em>${result.content.substring(0, 200)}...</em>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<div class="warning">⚠️ No matching entries found</div>';
+            }
+            
+            document.getElementById('aiResponseResults').innerHTML = html;
+        }
+
+        function testFormatCompatibility() {
+            const rawData = localStorage.getItem('devvibe-ai-knowledge');
+            let html = '<h4>🔍 Format Check:</h4>';
+            
+            if (rawData) {
+                const parsed = JSON.parse(rawData);
+                if (parsed.entries && Array.isArray(parsed.entries)) {
+                    html += '<div class="success">✅ React-compatible format!</div>';
+                } else if (Array.isArray(parsed)) {
+                    html += '<div class="warning">⚠️ Old format - needs conversion</div>';
+                } else {
+                    html += '<div class="error">❌ Unknown format</div>';
+                }
+            } else {
+                html += '<div class="warning">⚠️ No data to check</div>';
+            }
+            
+            document.getElementById('formatResults').innerHTML = html;
+        }
+
+        function convertToReactFormat() {
+            const knowledge = testManager.getKnowledge();
+            testManager.saveKnowledge(knowledge);
+            document.getElementById('formatResults').innerHTML += 
+                '<div class="success">✅ Converted to React format!</div>';
+            setTimeout(testFormatCompatibility, 100);
+        }
+
+        function showRawData() {
+            const knowledge = localStorage.getItem('devvibe-ai-knowledge');
+            document.getElementById('rawDataDisplay').innerHTML = knowledge ? 
+                `<div class="test-data">${knowledge}</div>` :
+                '<div class="warning">⚠️ No data found</div>';
+        }
+
+        function clearAndTest() {
+            if (confirm('Clear all data and run test?')) {
+                localStorage.clear();
+                testManager.addEntry({
+                    title: "Auto Test Entry",
+                    content: "This is an automatically generated test entry to verify the system works.",
+                    category: "services",
+                    keywords: ["test", "auto", "verification"]
+                });
+                setTimeout(analyzeStorage, 100);
+            }
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', analyzeStorage);
+    </script>
+</body>
+</html>

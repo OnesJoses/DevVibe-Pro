@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Local AI Knowledge Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .system-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .status-card {
+            background: rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 auto 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-active { background: #48bb78; }
+        .status-warning { background: #ed8936; }
+        .status-error { background: #f56565; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .feature-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        .feature-desc {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.1);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .stat-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-label {
+            font-size: 0.95em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .chat-container {
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            height: 450px;
+            overflow-y: auto;
+            padding: 25px;
+            margin-bottom: 25px;
+            background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+            position: relative;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            border-radius: 15px;
+            max-width: 85%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .ai-message {
+            background: white;
+            border: 1px solid #e5e7eb;
+            margin-right: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .message-meta {
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .response-time {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7em;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .rating-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .rating-btn {
+            background: white;
+            border: 2px solid #e5e7eb;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .rating-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .rating-excellent { 
+            border-color: #48bb78; 
+            color: #48bb78; 
+        }
+        .rating-excellent:hover { 
+            background: #48bb78; 
+            color: white; 
+        }
+
+        .rating-good { 
+            border-color: #4299e1; 
+            color: #4299e1; 
+        }
+        .rating-good:hover { 
+            background: #4299e1; 
+            color: white; 
+        }
+
+        .rating-retry { 
+            border-color: #ed8936; 
+            color: #ed8936; 
+        }
+        .rating-retry:hover { 
+            background: #ed8936; 
+            color: white; 
+        }
+
+        .rating-bad { 
+            border-color: #f56565; 
+            color: #f56565; 
+        }
+        .rating-bad:hover { 
+            background: #f56565; 
+            color: white; 
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .control-btn {
+            background: white;
+            border: 2px solid #e5e7eb;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #f3f4f6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
+
+        .danger-btn {
+            background: #fed7d7;
+            border-color: #fc8181;
+            color: #c53030;
+        }
+
+        .danger-btn:hover {
+            background: #fc8181;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 25px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e5e7eb;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .backup-info {
+            background: #e6fffa;
+            border: 2px solid #81e6d9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .backup-info h3 {
+            color: #234e52;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .backup-info p {
+            color: #285e61;
+            line-height: 1.6;
+        }
+
+        .file-info {
+            background: #f0f9ff;
+            border: 2px solid #bae6fd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .file-path {
+            font-family: 'Courier New', monospace;
+            background: rgba(0,0,0,0.05);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💾 Enhanced Local AI</h1>
+            <p>Lightning-Fast Knowledge Management with Automatic Backup System</p>
+            
+            <div class="system-status">
+                <div class="status-card">
+                    <div class="status-indicator status-active" id="localStatus"></div>
+                    <div>Local Storage</div>
+                    <small id="localStatusText">Ready</small>
+                </div>
+                <div class="status-card">
+                    <div class="status-indicator status-active" id="backupStatus"></div>
+                    <div>Auto Backup</div>
+                    <small id="backupStatusText">Every 10 min</small>
+                </div>
+                <div class="status-card">
+                    <div class="status-indicator status-active" id="syncStatus"></div>
+                    <div>Real-time Sync</div>
+                    <small id="syncStatusText">Active</small>
+                </div>
+                <div class="status-card">
+                    <div class="status-indicator status-active" id="costStatus"></div>
+                    <div>Cloud Costs</div>
+                    <small id="costStatusText">$0.00</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Features Grid -->
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">⚡</span>
+                    <div class="feature-title">Lightning Fast</div>
+                    <div class="feature-desc">Local storage provides instant response times with no network delays</div>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">💾</span>
+                    <div class="feature-title">Auto Backup</div>
+                    <div class="feature-desc">Automatic backups every 10 minutes with 12 hours of history</div>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔄</span>
+                    <div class="feature-title">Real-time Sync</div>
+                    <div class="feature-desc">File watchers ensure data is synchronized across all sessions</div>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🆓</span>
+                    <div class="feature-title">Zero Costs</div>
+                    <div class="feature-desc">No cloud bills, no monthly fees - completely free to operate</div>
+                </div>
+            </div>
+
+            <!-- Backup Information -->
+            <div class="backup-info">
+                <h3>🔒 Enterprise-Grade Backup Protection</h3>
+                <p>Your AI knowledge is automatically backed up every 10 minutes to your local drive. We keep 72 backups (12 hours of history) so you can restore from any point in time. All data stays on your computer - no cloud dependencies!</p>
+            </div>
+
+            <!-- Stats Panel -->
+            <div class="stats-panel" id="statsPanel">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalQueries">0</div>
+                    <div class="stat-label">Total Queries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="excellentResponses">0</div>
+                    <div class="stat-label">Excellent Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="blockedResponses">0</div>
+                    <div class="stat-label">Blocked Responses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="storageUsed">0 KB</div>
+                    <div class="stat-label">Local Storage Used</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="backupCount">0</div>
+                    <div class="stat-label">Backups Available</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avgResponseTime">0ms</div>
+                    <div class="stat-label">Avg Response Time</div>
+                </div>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="chat-container" id="chatContainer">
+                <div class="ai-message">
+                    <div>👋 Hello! I'm your enhanced local AI assistant with enterprise-grade backup protection. I can help with development questions, pricing, and technical guidance.</div>
+                    <div class="message-meta">
+                        Local AI System • Auto-backup active • <span class="response-time">0ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input -->
+            <div class="input-container">
+                <input 
+                    type="text" 
+                    class="input-field" 
+                    id="messageInput" 
+                    placeholder="Ask me about services, pricing, web development..."
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send Message</button>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="control-btn primary-btn" onclick="refreshStats()">📊 Refresh Stats</button>
+                <button class="control-btn" onclick="createManualBackup()">💾 Create Backup</button>
+                <button class="control-btn" onclick="listBackups()">📋 View Backups</button>
+                <button class="control-btn" onclick="exportData()">📤 Export Data</button>
+                <button class="control-btn" onclick="showFileInfo()">📁 Show File Locations</button>
+                <button class="control-btn danger-btn" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+
+            <!-- File Information -->
+            <div class="file-info" id="fileInfo" style="display: none;">
+                <h3>📁 Local File Locations</h3>
+                <p><strong>Data Directory:</strong> <span class="file-path" id="dataDir">ai-knowledge-data/</span></p>
+                <p><strong>Backup Directory:</strong> <span class="file-path" id="backupDir">ai-knowledge-backups/</span></p>
+                <p><strong>Auto-backup Interval:</strong> Every 10 minutes</p>
+                <p><strong>Backup Retention:</strong> 72 backups (12 hours)</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Enhanced Local AI System (for demo purposes)
+        class MockEnhancedLocalAI {
+            constructor() {
+                this.isReady = false;
+                this.stats = {
+                    totalQueries: 0,
+                    excellentResponses: 0,
+                    blockedResponses: 0,
+                    storage: { totalSizeFormatted: '0 KB' },
+                    backupCount: 0
+                };
+                this.conversations = [];
+                this.responseTimes = [];
+                this.setTimeout(() => {
+                    this.isReady = true;
+                    this.stats.backupCount = Math.floor(Math.random() * 20) + 5;
+                    updateSystemStatus();
+                }, 1500);
+            }
+
+            setTimeout(fn, delay) {
+                return setTimeout(fn, delay);
+            }
+
+            async generateResponse(query) {
+                const startTime = Date.now();
+                
+                // Simulate ultra-fast local processing
+                await new Promise(resolve => this.setTimeout(resolve, Math.random() * 200 + 50));
+                
+                const responseTime = Date.now() - startTime;
+                this.responseTimes.push(responseTime);
+                if (this.responseTimes.length > 10) this.responseTimes.shift();
+                
+                this.stats.totalQueries++;
+                
+                const responses = {
+                    'services': `I offer comprehensive development services including:
+
+🔧 **Custom Development**
+• Web applications and websites
+• Mobile app development  
+• System integrations and APIs
+
+💡 **Consulting & Strategy**
+• Technical architecture planning
+• Code reviews and optimization
+• Technology stack recommendations
+
+🚀 **Digital Solutions**
+• E-commerce platforms
+• Business automation tools
+• Desktop and web applications
+
+💾 **Local AI Features**
+• Lightning-fast response times
+• Automatic backup system (every 10 minutes)
+• Real-time data synchronization
+• Zero cloud costs or dependencies
+
+All responses are powered by local storage with enterprise-grade backup protection. Would you like to know more about any specific service?`,
+
+                    'pricing': `Project pricing varies based on complexity and requirements:
+
+**Factors Affecting Cost** 💰
+• Project scope and features
+• Timeline requirements
+• Technology complexity
+• Integration needs
+
+**My Transparent Approach** 🤝
+• Free initial consultation
+• Detailed project breakdown
+• No hidden infrastructure costs
+• Local development advantages
+
+**What's Always Included** ✅
+• Unlimited revisions until satisfied
+• Mobile-responsive design
+• Basic SEO optimization
+• Local storage setup (when applicable)
+• Post-launch support period
+
+**Local Development Benefits** 💾
+• No ongoing cloud costs
+• Maximum performance
+• Data ownership and control
+• Automatic backup systems
+
+I'd be happy to discuss your specific needs and provide a detailed estimate. What type of project are you planning?`,
+
+                    'default': `I'm here to help with your development needs! 
+
+My local AI system can assist with:
+• Technical questions and best practices
+• Project planning and cost estimates  
+• Service information and recommendations
+• Development strategy and guidance
+
+💾 **Local AI Advantages:**
+• Lightning-fast responses (no network delays)
+• Your data is automatically backed up every 10 minutes
+• Real-time synchronization across sessions
+• Zero cloud costs or dependencies
+• Enterprise-grade data protection
+
+To give you the most relevant information, could you tell me more about what you're trying to accomplish?`
+                };
+
+                const queryLower = query.toLowerCase();
+                let response;
+                
+                if (queryLower.includes('service') || queryLower.includes('offer')) {
+                    response = responses.services;
+                } else if (queryLower.includes('cost') || queryLower.includes('price') || queryLower.includes('much')) {
+                    response = responses.pricing;
+                } else {
+                    response = responses.default;
+                }
+
+                return {
+                    answer: response,
+                    source: this.isReady ? 'local_generation' : 'local_fallback',
+                    confidence: 90,
+                    localPowered: this.isReady,
+                    responseTime: responseTime
+                };
+            }
+
+            async saveFeedback(question, answer, rating) {
+                this.conversations.push({ question, answer, rating, timestamp: new Date() });
+                
+                if (rating === 5) {
+                    this.stats.excellentResponses++;
+                    return '⭐ Excellent! Saved locally with automatic backup';
+                } else if (rating <= 2) {
+                    this.stats.blockedResponses++;
+                    return '🚫 Blocked locally! Will never repeat this response';
+                }
+                
+                return '📝 Feedback saved locally with backup protection';
+            }
+
+            async getLocalStats() {
+                const avgResponseTime = this.responseTimes.length > 0 
+                    ? Math.round(this.responseTimes.reduce((a, b) => a + b, 0) / this.responseTimes.length)
+                    : 0;
+
+                return {
+                    ...this.stats,
+                    systemStatus: this.isReady ? 'local_ready' : 'initializing',
+                    backupSystem: 'active',
+                    storage: {
+                        totalSizeFormatted: Math.floor(this.stats.totalQueries * 1.2) + ' KB'
+                    },
+                    avgResponseTime: avgResponseTime
+                };
+            }
+
+            async clearAllData() {
+                this.stats = {
+                    totalQueries: 0,
+                    excellentResponses: 0,
+                    blockedResponses: 0,
+                    storage: { totalSizeFormatted: '0 KB' },
+                    backupCount: this.stats.backupCount
+                };
+                this.conversations = [];
+                this.responseTimes = [];
+                return 'All local data cleared successfully (backup created first)';
+            }
+
+            async createBackup() {
+                this.stats.backupCount++;
+                return 'Manual backup created successfully';
+            }
+
+            async listBackups() {
+                const backups = [];
+                for (let i = 0; i < this.stats.backupCount; i++) {
+                    const date = new Date(Date.now() - i * 10 * 60 * 1000);
+                    backups.push(date.toISOString().replace(/[:.]/g, '-'));
+                }
+                return backups;
+            }
+
+            async exportData() {
+                return 'Data exported to ai-knowledge-export.json';
+            }
+
+            getSystemStatus() {
+                return {
+                    ready: this.isReady,
+                    backupSystem: true,
+                    realTimeSync: true,
+                    autoBackupInterval: '10 minutes'
+                };
+            }
+        }
+
+        // Initialize mock AI (replace with real import in production)
+        const localAI = new MockEnhancedLocalAI();
+        let messageCount = 0;
+
+        // Update system status indicators
+        function updateSystemStatus() {
+            const status = localAI.getSystemStatus();
+            
+            document.getElementById('localStatusText').textContent = status.ready ? 'Ready' : 'Starting...';
+            document.getElementById('backupStatusText').textContent = status.backupSystem ? 'Every 10 min' : 'Disabled';
+            document.getElementById('syncStatusText').textContent = status.realTimeSync ? 'Active' : 'Inactive';
+            document.getElementById('costStatusText').textContent = '$0.00';
+        }
+
+        // Handle key press for enter to send
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Send message function
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const chatContainer = document.getElementById('chatContainer');
+            
+            const message = input.value.trim();
+            if (!message) return;
+
+            // Disable input
+            input.disabled = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<div class="spinner"></div>';
+
+            // Add user message
+            const userMessageId = 'user-' + (++messageCount);
+            chatContainer.innerHTML += `
+                <div class="message user-message" id="${userMessageId}">
+                    <div>${message}</div>
+                    <div class="message-meta">You • ${new Date().toLocaleTimeString()}</div>
+                </div>
+            `;
+
+            // Clear input
+            input.value = '';
+
+            try {
+                // Get AI response
+                const response = await localAI.generateResponse(message);
+                
+                // Add AI message
+                const aiMessageId = 'ai-' + messageCount;
+                chatContainer.innerHTML += `
+                    <div class="message ai-message" id="${aiMessageId}">
+                        <div>${response.answer.replace(/\n/g, '<br>')}</div>
+                        <div class="message-meta">
+                            Local AI • ${response.source} • ${response.confidence}% confidence • 
+                            <span class="response-time">${response.responseTime}ms</span>
+                            ${response.localPowered ? '💾' : '⚠️'}
+                        </div>
+                        <div class="rating-container">
+                            <button class="rating-btn rating-excellent" onclick="giveRating('${aiMessageId}', '${message}', '${response.answer.replace(/'/g, "\\'")}', 5)">
+                                😊 Perfect! (Saves locally)
+                            </button>
+                            <button class="rating-btn rating-good" onclick="giveRating('${aiMessageId}', '${message}', '${response.answer.replace(/'/g, "\\'")}', 4)">
+                                👍 Good (Will learn from this)
+                            </button>
+                            <button class="rating-btn rating-retry" onclick="giveRating('${aiMessageId}', '${message}', '${response.answer.replace(/'/g, "\\'")}', 3)">
+                                🔄 Try different answer
+                            </button>
+                            <button class="rating-btn rating-bad" onclick="giveRating('${aiMessageId}', '${message}', '${response.answer.replace(/'/g, "\\'")}', 1)">
+                                😞 Not helpful (Block locally)
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // Update stats
+                refreshStats();
+
+            } catch (error) {
+                console.error('Error:', error);
+                chatContainer.innerHTML += `
+                    <div class="message ai-message">
+                        <div>❌ Sorry, I encountered an error processing your request. Please try again.</div>
+                        <div class="message-meta">Error • ${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send Message';
+                input.focus();
+            }
+        }
+
+        // Give rating function
+        async function giveRating(messageId, question, answer, rating) {
+            const result = await localAI.saveFeedback(question, answer, rating);
+            
+            // Update the message to show feedback was given
+            const messageElement = document.getElementById(messageId);
+            const ratingContainer = messageElement.querySelector('.rating-container');
+            ratingContainer.innerHTML = `<div style="color: #48bb78; font-size: 0.9em; margin-top: 10px;">✅ ${result}</div>`;
+
+            // Update stats
+            refreshStats();
+
+            // Show feedback message
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML += `
+                <div class="message ai-message">
+                    <div>${result}</div>
+                    <div class="message-meta">Learning Feedback • ${new Date().toLocaleTimeString()}</div>
+                </div>
+            `;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Update stats display
+        async function refreshStats() {
+            const stats = await localAI.getLocalStats();
+            
+            document.getElementById('totalQueries').textContent = stats.totalQueries || 0;
+            document.getElementById('excellentResponses').textContent = stats.excellentResponses || 0;
+            document.getElementById('blockedResponses').textContent = stats.blockedResponses || 0;
+            document.getElementById('storageUsed').textContent = stats.storage?.totalSizeFormatted || '0 KB';
+            document.getElementById('backupCount').textContent = stats.backupCount || 0;
+            document.getElementById('avgResponseTime').textContent = (stats.avgResponseTime || 0) + 'ms';
+        }
+
+        // Control functions
+        async function createManualBackup() {
+            const result = await localAI.createBackup();
+            alert(result);
+            refreshStats();
+        }
+
+        async function listBackups() {
+            const backups = await localAI.listBackups();
+            const backupList = backups.slice(0, 10).join('\n');
+            alert(`Available Backups (newest first):\n\n${backupList}\n\n... and ${Math.max(0, backups.length - 10)} more`);
+        }
+
+        async function exportData() {
+            const result = await localAI.exportData();
+            alert(result);
+        }
+
+        function showFileInfo() {
+            const fileInfo = document.getElementById('fileInfo');
+            const isVisible = fileInfo.style.display !== 'none';
+            fileInfo.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                document.getElementById('dataDir').textContent = 'DevVibe-Pro/ai-knowledge-data/';
+                document.getElementById('backupDir').textContent = 'DevVibe-Pro/ai-knowledge-backups/';
+            }
+        }
+
+        async function clearAllData() {
+            if (confirm('Are you sure you want to clear all AI knowledge data? A backup will be created first.')) {
+                const result = await localAI.clearAllData();
+                alert(result);
+                
+                // Clear chat
+                document.getElementById('chatContainer').innerHTML = `
+                    <div class="ai-message">
+                        <div>🗑️ All data cleared! A backup was created before clearing. Starting fresh...</div>
+                        <div class="message-meta">System Reset • ${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+                
+                refreshStats();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSystemStatus();
+            refreshStats();
+            
+            // Check system status periodically
+            setInterval(updateSystemStatus, 3000);
+            setInterval(refreshStats, 30000); // Update stats every 30 seconds
+        });
+    </script>
+</body>
+</html>

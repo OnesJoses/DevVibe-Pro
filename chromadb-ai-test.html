@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChromaDB AI Test Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .status.connected { background: #dcfce7; color: #166534; }
+        .status.error { background: #fef2f2; color: #dc2626; }
+        .status.warning { background: #fef3c7; color: #d97706; }
+        .chat-box {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            height: 400px;
+            padding: 16px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+            background: #f9fafb;
+        }
+        .message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        .user { background: #dbeafe; color: #1e40af; margin-left: 60px; }
+        .assistant { background: #f3e8ff; color: #7c3aed; margin-right: 60px; }
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 24px;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover { background: #6d28d9; }
+        button:disabled { background: #9ca3af; cursor: not-allowed; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value { font-size: 24px; font-weight: bold; color: #7c3aed; }
+        .stat-label { font-size: 12px; color: #64748b; }
+        .loading { color: #6b7280; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 ChromaDB Enhanced AI Test</h1>
+            <p>Test the new ChromaDB-powered AI system with semantic search and learning</p>
+        </div>
+
+        <div id="status" class="status warning">
+            <span>🔄 Initializing ChromaDB connection...</span>
+        </div>
+
+        <div id="chatBox" class="chat-box">
+            <div class="message assistant">
+                <strong>Enhanced AI:</strong> Hello! I'm now powered by ChromaDB for advanced semantic search and learning. 
+                Try asking me about:
+                <ul>
+                    <li>Development services</li>
+                    <li>Pricing information</li>
+                    <li>Technical questions</li>
+                    <li>Process workflows</li>
+                </ul>
+                I'll learn from our conversation and improve over time!
+            </div>
+        </div>
+
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="userInput" 
+                placeholder="Ask me anything about development, services, or technical topics..."
+                onkeypress="if(event.key==='Enter') sendMessage()"
+            >
+            <button onclick="sendMessage()" id="sendBtn">Send</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="chromaCount">-</div>
+                <div class="stat-label">ChromaDB Documents</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="conversationCount">-</div>
+                <div class="stat-label">Conversations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="conceptCount">-</div>
+                <div class="stat-label">Learned Concepts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="confidenceLevel">-</div>
+                <div class="stat-label">Avg Confidence</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Simulate the enhanced AI system (this would normally import from your modules)
+        class ChromaDBTestAI {
+            constructor() {
+                this.isConnected = false
+                this.conversations = []
+                this.concepts = new Set()
+                this.documents = 0
+                this.init()
+            }
+
+            async init() {
+                try {
+                    // Simulate ChromaDB connection test
+                    await this.testConnection()
+                    this.updateStatus('connected', '✅ ChromaDB connected successfully!')
+                    this.updateStats()
+                } catch (error) {
+                    this.updateStatus('error', '❌ ChromaDB connection failed - using local fallback')
+                }
+            }
+
+            async testConnection() {
+                // Simulate connection delay
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        // Simulate 80% success rate
+                        if (Math.random() > 0.2) {
+                            this.isConnected = true
+                            this.documents = Math.floor(Math.random() * 50) + 10
+                            resolve(true)
+                        } else {
+                            reject(new Error('Connection failed'))
+                        }
+                    }, 2000)
+                })
+            }
+
+            async processQuery(query) {
+                // Simulate AI processing
+                await new Promise(resolve => setTimeout(resolve, 1000))
+
+                const intent = this.analyzeIntent(query)
+                const response = this.generateResponse(query, intent)
+                
+                // Simulate learning
+                this.extractConcepts(query + ' ' + response)
+                this.conversations.push({ query, response, timestamp: Date.now() })
+                this.updateStats()
+
+                return {
+                    answer: response,
+                    confidence: intent.confidence,
+                    sources: this.isConnected ? ['chromadb_knowledge', 'web_search'] : ['local_fallback'],
+                    intent: intent.type
+                }
+            }
+
+            analyzeIntent(query) {
+                const q = query.toLowerCase()
+                if (q.includes('service') || q.includes('offer')) return { type: 'service_inquiry', confidence: 0.9 }
+                if (q.includes('price') || q.includes('cost')) return { type: 'pricing', confidence: 0.85 }
+                if (q.includes('react') || q.includes('development')) return { type: 'technical', confidence: 0.8 }
+                if (q.includes('process') || q.includes('workflow')) return { type: 'process', confidence: 0.75 }
+                return { type: 'general', confidence: 0.6 }
+            }
+
+            generateResponse(query, intent) {
+                const responses = {
+                    service_inquiry: `I offer comprehensive development services including custom web applications, AI integration, and consulting. Based on your question "${query}", I can help you with tailored solutions for your specific needs.`,
+                    pricing: `Pricing depends on project scope and complexity. For "${query}", I provide transparent, value-based pricing with detailed project breakdowns. Would you like a custom quote?`,
+                    technical: `For technical questions like "${query}", I can provide expert guidance on modern development practices, frameworks, and implementation strategies. What specific technical challenge are you facing?`,
+                    process: `My development process is collaborative and transparent. For projects like "${query}", I follow an agile methodology with regular communication and iterative delivery.`,
+                    general: `Thanks for your question about "${query}". I'm here to help with development, technical consulting, and project guidance. Could you provide more specific details about what you're looking for?`
+                }
+                
+                return responses[intent.type] || responses.general
+            }
+
+            extractConcepts(text) {
+                const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || []
+                words.forEach(word => {
+                    if (!['this', 'that', 'with', 'have', 'will', 'been', 'from'].includes(word)) {
+                        this.concepts.add(word)
+                    }
+                })
+            }
+
+            updateStatus(type, message) {
+                const statusEl = document.getElementById('status')
+                statusEl.className = `status ${type}`
+                statusEl.innerHTML = `<span>${message}</span>`
+            }
+
+            updateStats() {
+                document.getElementById('chromaCount').textContent = this.documents
+                document.getElementById('conversationCount').textContent = this.conversations.length
+                document.getElementById('conceptCount').textContent = this.concepts.size
+                document.getElementById('confidenceLevel').textContent = 
+                    this.conversations.length > 0 ? '85%' : '-'
+            }
+        }
+
+        // Initialize the test AI
+        const testAI = new ChromaDBTestAI()
+
+        // Make functions global
+        window.sendMessage = async function() {
+            const input = document.getElementById('userInput')
+            const chatBox = document.getElementById('chatBox')
+            const sendBtn = document.getElementById('sendBtn')
+            
+            const query = input.value.trim()
+            if (!query) return
+
+            // Add user message
+            chatBox.innerHTML += `
+                <div class="message user">
+                    <strong>You:</strong> ${query}
+                </div>
+            `
+
+            // Clear input and disable button
+            input.value = ''
+            sendBtn.disabled = true
+            sendBtn.textContent = 'Thinking...'
+
+            // Add loading message
+            chatBox.innerHTML += `
+                <div class="message assistant loading" id="loading">
+                    <strong>Enhanced AI:</strong> 🧠 Analyzing intent... searching ChromaDB... generating response...
+                </div>
+            `
+            chatBox.scrollTop = chatBox.scrollHeight
+
+            try {
+                // Get AI response
+                const result = await testAI.processQuery(query)
+                
+                // Remove loading message
+                document.getElementById('loading').remove()
+                
+                // Add AI response
+                chatBox.innerHTML += `
+                    <div class="message assistant">
+                        <strong>Enhanced AI (${(result.confidence * 100).toFixed(0)}% confidence):</strong><br>
+                        ${result.answer}<br><br>
+                        <small>📊 Intent: ${result.intent} | 📚 Sources: ${result.sources.join(', ')}</small>
+                    </div>
+                `
+            } catch (error) {
+                document.getElementById('loading').remove()
+                chatBox.innerHTML += `
+                    <div class="message assistant">
+                        <strong>Enhanced AI:</strong> I encountered an issue processing your question. Please try again.
+                    </div>
+                `
+            }
+
+            // Re-enable button
+            sendBtn.disabled = false
+            sendBtn.textContent = 'Send'
+            chatBox.scrollTop = chatBox.scrollHeight
+        }
+    </script>
+</body>
+</html>

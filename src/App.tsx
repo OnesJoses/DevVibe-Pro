@@ -11,6 +11,7 @@ import ResetPasswordPage from './pages/ResetPassword'
 import AuthCallback from './pages/AuthCallback'
 import AIPage from './pages/AI'
 import AdminHelperPage from './pages/AdminHelper'
+import KnowledgeManagerPage from './pages/KnowledgeManager'
 import EcommerceDemo from './pages/demos/EcommerceDemo'
 import DashboardDemo from './pages/demos/DashboardDemo'
 import RestaurantDemo from './pages/demos/RestaurantDemo'
@@ -46,12 +47,12 @@ export default function App() {
     <HashRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/*" element={<HomePage />} />
         <Route path="/project/:slug" element={<ProjectDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/knowledge" element={<KnowledgeManagerPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
@@ -60,6 +61,7 @@ export default function App() {
         <Route path="/demo/ecommerce" element={<EcommerceDemo />} />
         <Route path="/demo/dashboard" element={<DashboardDemo />} />
         <Route path="/demo/restaurant" element={<RestaurantDemo />} />
+        <Route path="/*" element={<HomePage />} />
       </Routes>
     </HashRouter>
   )

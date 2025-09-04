@@ -10,6 +10,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Create a single supabase client for interacting with your database
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    redirectTo: 'https://onesmusm-workspace.vercel.app/auth/callback'
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
   }
 })

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced AI Intent Analysis Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .test-input {
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .test-result {
+            background: #f0f9ff;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #3b82f6;
+        }
+        .intent-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+        .warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Enhanced AI Intent Analysis Test</h1>
+        <div class="status" id="status">Ready to test enhanced AI system...</div>
+        
+        <button onclick="runTests()">Run All Tests</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div id="testResults"></div>
+    </div>
+
+    <script type="module">
+        import { EnhancedIntelligentAI } from './dist/enhanced-intelligent-ai.js';
+
+        let aiSystem;
+
+        async function initializeAI() {
+            try {
+                aiSystem = new EnhancedIntelligentAI();
+                await aiSystem.initialize();
+                document.getElementById('status').textContent = '✅ AI System Initialized Successfully';
+                document.getElementById('status').style.color = '#10b981';
+                return true;
+            } catch (error) {
+                document.getElementById('status').textContent = `❌ AI Initialization Error: ${error.message}`;
+                document.getElementById('status').style.color = '#ef4444';
+                return false;
+            }
+        }
+
+        async function testQueries() {
+            const testCases = [
+                // Simple conversational inputs (should NOT trigger web search)
+                { query: "hi", expectedCategory: "greeting", expectWebSearch: false },
+                { query: "hello", expectedCategory: "greeting", expectWebSearch: false },
+                { query: "hey there", expectedCategory: "greeting", expectWebSearch: false },
+                { query: "thanks", expectedCategory: "gratitude", expectWebSearch: false },
+                { query: "thank you", expectedCategory: "gratitude", expectWebSearch: false },
+                { query: "how are you?", expectedCategory: "personal_question", expectWebSearch: false },
+                { query: "nice work", expectedCategory: "casual_response", expectWebSearch: false },
+                
+                // Complex queries (should trigger web search)
+                { query: "How do I implement authentication in React?", expectedCategory: "technical", expectWebSearch: true },
+                { query: "What are your development services?", expectedCategory: "service_inquiry", expectWebSearch: true },
+                { query: "Can you show me your portfolio?", expectedCategory: "portfolio", expectWebSearch: true },
+                { query: "What's the latest in machine learning?", expectedCategory: "learning", expectWebSearch: true }
+            ];
+
+            const resultsContainer = document.getElementById('testResults');
+            resultsContainer.innerHTML = '';
+
+            for (const testCase of testCases) {
+                const testDiv = document.createElement('div');
+                testDiv.className = 'test-section';
+                
+                try {
+                    const result = await aiSystem.processQuery(testCase.query);
+                    
+                    const inputDiv = document.createElement('div');
+                    inputDiv.className = 'test-input';
+                    inputDiv.textContent = `Input: "${testCase.query}"`;
+                    
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'test-result';
+                    
+                    // Check if intent analysis worked correctly
+                    const intentMatches = result.intent?.type === testCase.expectedCategory;
+                    const webSearchAppropriate = testCase.expectWebSearch ? 
+                        !result.intent?.skipWebSearch : 
+                        result.intent?.skipWebSearch;
+                    
+                    const success = intentMatches && webSearchAppropriate;
+                    
+                    if (success) {
+                        resultDiv.classList.add('success');
+                    } else {
+                        resultDiv.classList.add('warning');
+                    }
+                    
+                    resultDiv.innerHTML = `
+                        <strong>Response:</strong> ${result.response}<br>
+                        <div class="intent-info">
+                            Intent: ${result.intent?.type || 'unknown'} 
+                            ${intentMatches ? '✅' : '❌ Expected: ' + testCase.expectedCategory}<br>
+                            Web Search: ${result.intent?.skipWebSearch ? 'Skipped' : 'Enabled'} 
+                            ${webSearchAppropriate ? '✅' : '❌'}
+                        </div>
+                    `;
+                    
+                    testDiv.appendChild(inputDiv);
+                    testDiv.appendChild(resultDiv);
+                    
+                } catch (error) {
+                    testDiv.innerHTML = `
+                        <div class="test-input">Input: "${testCase.query}"</div>
+                        <div class="test-result" style="border-left-color: #ef4444; background: #fef2f2;">
+                            <strong>Error:</strong> ${error.message}
+                        </div>
+                    `;
+                }
+                
+                resultsContainer.appendChild(testDiv);
+            }
+        }
+
+        window.runTests = async function() {
+            document.getElementById('status').textContent = '🔄 Initializing AI system...';
+            document.getElementById('status').style.color = '#f59e0b';
+            
+            const initialized = await initializeAI();
+            if (initialized) {
+                document.getElementById('status').textContent = '🧪 Running intent analysis tests...';
+                await testQueries();
+                document.getElementById('status').textContent = '✅ Tests completed! Check results below.';
+                document.getElementById('status').style.color = '#10b981';
+            }
+        };
+
+        window.clearResults = function() {
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('status').textContent = 'Ready to test enhanced AI system...';
+            document.getElementById('status').style.color = '#333';
+        };
+
+        // Auto-initialize on page load
+        window.addEventListener('load', () => {
+            document.getElementById('status').textContent = 'Click "Run All Tests" to begin...';
+        });
+    </script>
+</body>
+</html>

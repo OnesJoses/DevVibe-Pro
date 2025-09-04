@@ -111,7 +111,7 @@ async function searchKnowledge() {
   }
   
   console.log(`\n✅ Found ${results.length} results:\n`)
-  results.forEach((result, i) => {
+  results.forEach((result: { entry: any; relevance: number }, i: number) => {
     console.log(`${i + 1}. 📝 ${result.entry.title}`)
     console.log(`   📊 Relevance: ${(result.relevance * 100).toFixed(1)}%`)
     console.log(`   🏷️  Category: ${result.entry.category}`)
@@ -246,7 +246,7 @@ async function showStats() {
   // Show most used knowledge
   console.log('\n🔥 Most Used Knowledge:')
   const mostUsed = ai.getMostUsedKnowledge(5)
-  mostUsed.forEach((entry, i) => {
+  mostUsed.forEach((entry: any, i: number) => {
     const usage = entry.metadata.usage_count || 0
     console.log(`  ${i + 1}. ${entry.title} (used ${usage} times)`)
   })
@@ -254,7 +254,7 @@ async function showStats() {
   // Show recently updated
   console.log('\n🆕 Recently Updated:')
   const recent = ai.getRecentKnowledge(5)
-  recent.forEach((entry, i) => {
+  recent.forEach((entry: any, i: number) => {
     const date = new Date(entry.metadata.lastUpdated).toLocaleDateString()
     console.log(`  ${i + 1}. ${entry.title} (${date})`)
   })
@@ -283,7 +283,7 @@ async function browseByCategory() {
   const entries = ai.getKnowledgeByCategory(selectedCategory)
   
   console.log(`\n📚 Knowledge in '${selectedCategory}' category:\n`)
-  entries.forEach((entry, i) => {
+  entries.forEach((entry: any, i: number) => {
     console.log(`${i + 1}. 📝 ${entry.title}`)
     console.log(`   📄 ${entry.content.substring(0, 100)}...`)
     console.log(`   🕐 Updated: ${new Date(entry.metadata.lastUpdated).toLocaleDateString()}`)

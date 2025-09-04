@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 AI Response Fix Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .problem-fixed {
+            background: #f0fdf4;
+            border: 1px solid #10b981;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .fix-title {
+            font-weight: bold;
+            color: #059669;
+            margin-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        .test-query {
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .test-result {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+            margin: 10px 0;
+        }
+        .result-good {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+        .result-meta {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .before, .after {
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        .before {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+        .after {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 AI Response Fix Verification</h1>
+        
+        <div class="problem-fixed">
+            <div class="fix-title">✅ Problems Fixed:</div>
+            <ul style="margin: 10px 0 0 20px;">
+                <li><strong>"Hi there"</strong> → Now properly detected as greeting</li>
+                <li><strong>"What can you do?"</strong> → Now shows comprehensive service info</li>
+                <li><strong>Technical questions</strong> → No unnecessary web searches</li>
+                <li><strong>Programming topics</strong> → Uses built-in knowledge</li>
+                <li><strong>Web search fallbacks</strong> → More natural responses</li>
+            </ul>
+        </div>
+        
+        <div class="status" id="status">Ready to test the fixed AI responses...</div>
+        
+        <button onclick="runProblemQueries()">🧪 Test Previously Broken Queries</button>
+        <button onclick="clearResults()">🗑️ Clear Results</button>
+        
+        <div id="testResults"></div>
+    </div>
+
+    <script type="module">
+        import { enhancedAI } from './dist/enhanced-intelligent-ai.js';
+
+        window.runProblemQueries = async function() {
+            document.getElementById('status').innerHTML = '<div class="loading"></div> Testing fixed AI responses...';
+            document.getElementById('status').style.color = '#f59e0b';
+            
+            const problemQueries = [
+                {
+                    query: "Hi there",
+                    issue: "Was asking for more context instead of greeting",
+                    expectedFix: "Should respond with a friendly greeting"
+                },
+                {
+                    query: "What can you do?",
+                    issue: "Was doing web search and giving generic response",
+                    expectedFix: "Should list specific capabilities and services"
+                },
+                {
+                    query: "Python language",
+                    issue: "Web search failing with no specific results",
+                    expectedFix: "Should provide helpful Python information"
+                },
+                {
+                    query: "which programming languages",
+                    issue: "Web search with no results, generic response",
+                    expectedFix: "Should list supported programming languages"
+                },
+                {
+                    query: "web development",
+                    issue: "Unnecessary web search for basic topic",
+                    expectedFix: "Should use built-in web development knowledge"
+                }
+            ];
+
+            const resultsContainer = document.getElementById('testResults');
+            resultsContainer.innerHTML = '';
+
+            for (const testCase of problemQueries) {
+                await testProblemQuery(testCase, resultsContainer);
+            }
+
+            document.getElementById('status').textContent = '✅ All problem queries tested! Check the improvements below.';
+            document.getElementById('status').style.color = '#10b981';
+        };
+
+        async function testProblemQuery(testCase, container) {
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-section';
+            
+            try {
+                const startTime = Date.now();
+                const result = await enhancedAI.processQuery(testCase.query);
+                const responseTime = Date.now() - startTime;
+                
+                // Check if the response is improved
+                const noWebSearch = !result.metadata.webSearchPerformed;
+                const hasGoodResponse = result.answer.length > 50 && 
+                                      !result.answer.includes("I searched for information") &&
+                                      !result.answer.includes("didn't find specific details");
+                const isFixed = noWebSearch && hasGoodResponse;
+                
+                testDiv.innerHTML = `
+                    <div class="test-query">Query: "${testCase.query}"</div>
+                    
+                    <div class="comparison">
+                        <div class="before">
+                            <strong>❌ Previous Issue:</strong><br>
+                            ${testCase.issue}
+                        </div>
+                        <div class="after">
+                            <strong>✅ Expected Fix:</strong><br>
+                            ${testCase.expectedFix}
+                        </div>
+                    </div>
+                    
+                    <div class="result-meta">
+                        <span>Intent: ${result.metadata.intent?.type || 'unknown'}</span>
+                        <span>Confidence: ${Math.round(result.confidence * 100)}%</span>
+                        <span>Sources: ${result.sources.join(', ')}</span>
+                        <span>Response Time: ${responseTime}ms</span>
+                        <span style="color: ${isFixed ? '#10b981' : '#ef4444'}">
+                            ${isFixed ? '✅ FIXED' : '⚠️ Needs Review'}
+                        </span>
+                    </div>
+                    
+                    <div class="test-result ${isFixed ? 'result-good' : ''}">
+                        <strong>AI Response:</strong><br><br>
+                        ${result.answer}
+                    </div>
+                `;
+                
+            } catch (error) {
+                testDiv.innerHTML = `
+                    <div class="test-query">Query: "${testCase.query}"</div>
+                    <div class="test-result" style="background: #fef2f2; border-left-color: #ef4444;">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+            
+            container.appendChild(testDiv);
+            
+            // Add a small delay between tests for better UX
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        window.clearResults = function() {
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('status').textContent = 'Ready to test the fixed AI responses...';
+            document.getElementById('status').style.color = '#333';
+        };
+
+        // Auto-show instructions on load
+        window.addEventListener('load', () => {
+            document.getElementById('status').textContent = 'Click "Test Previously Broken Queries" to verify the fixes work...';
+        });
+    </script>
+</body>
+</html>
