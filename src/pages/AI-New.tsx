@@ -1,9 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Link } from 'react-router-dom'
-import { Search, Code, Globe, Palette, BookOpen, HelpCircle, Lightbulb } from 'lucide-react'
+import { Search, Code, Globe, Palette, BookOpen, HelpCircle, Lightbulb, Brain, MessageCircle, Menu } from 'lucide-react'
+import { chatHistoryManager, ChatMessage } from '../lib/chat-history-manager'
+import ChatHistory from '../components/ChatHistory'
+import MessageRating from '../components/MessageRating'
+import ChatSidebar from '../components/ChatSidebar'
+import { useAuthStore } from '../hooks/useAuthStore'
 
 // Comprehensive Knowledge Base
 const knowledgeBase = {
@@ -240,7 +245,7 @@ Next Steps:
 
 Results You Can Expect:
 • 90+ Google PageSpeed scores
-• <3 second load times globally
+• under 3 second load times globally
 • 100% mobile responsive
 • Search engine optimized
 • Accessible to all users`
@@ -340,12 +345,48 @@ Ask me anything about development, design, pricing, or how I can help grow your 
 }
 
 export default function AIPage() {
+  const { user } = useAuthStore()
   const [input, setInput] = useState('')
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string; title?: string }[]>([
-    { 
-      role: 'assistant', 
-      title: 'Welcome! 👋',
-      content: `I'm your intelligent project guide. I can answer questions about my development process, technical expertise, pricing, and how we can work together.
+  const [messages, setMessages] = useState<{ 
+    id: string;
+    role: 'user' | 'assistant'; 
+    content: string; 
+    title?: string;
+    timestamp: Date;
+    rating?: number;
+  }[]>([])
+  const [loading, setLoading] = useState(false)
+  const [currentSessionId, setCurrentSessionId] = useState<string>('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Initialize chat session
+  useEffect(() => {
+    if (user?.id) {
+      // Try to restore last session or create new one
+      const userSessions = chatHistoryManager.getUserSessions(user.id, { limit: 1 })
+      if (userSessions.length > 0 && userSessions[0].messages.length > 0) {
+        const lastSession = userSessions[0]
+        setCurrentSessionId(lastSession.id)
+        // Convert to local message format
+        const convertedMessages = lastSession.messages.map((msg: ChatMessage) => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          title: msg.metadata?.intent, // Using intent as title for now
+          timestamp: msg.timestamp,
+          rating: msg.metadata?.rating
+        }))
+        setMessages(convertedMessages)
+      } else {
+        startNewSession()
+      }
+    } else {
+      // Guest user - show welcome message
+      setMessages([{ 
+        id: 'welcome',
+        role: 'assistant', 
+        title: 'Welcome! 👋',
+        content: `I'm your intelligent project guide. I can answer questions about my development process, technical expertise, pricing, and how we can work together.
 
 **Try asking about:**
 • My development services and capabilities
@@ -353,29 +394,168 @@ export default function AIPage() {
 • Project timelines and pricing
 • How to get started on your project
 
-What would you like to know?`
+What would you like to know?`,
+        timestamp: new Date()
+      }])
     }
-  ])
-  const [loading, setLoading] = useState(false)
+  }, [user])
+
+  const startNewSession = async () => {
+    if (!user?.id) return
+    
+    try {
+      const sessionId = await chatHistoryManager.startNewSession(user.id, 'General Inquiry')
+      setCurrentSessionId(sessionId)
+      
+      // Add welcome message to new session
+      const welcomeMessage: ChatMessage = {
+        id: `msg_${Date.now()}`,
+        role: 'assistant',
+        content: `I'm your intelligent project guide. I can answer questions about my development process, technical expertise, pricing, and how we can work together.
+
+**Try asking about:**
+• My development services and capabilities
+• Technical stack and architecture  
+• Project timelines and pricing
+• How to get started on your project
+
+What would you like to know?`,
+        timestamp: new Date(),
+        metadata: {
+          intent: 'Welcome! 👋'
+        }
+      }
+      
+      await chatHistoryManager.addMessage(user.id, sessionId, welcomeMessage)
+      
+      setMessages([{
+        id: welcomeMessage.id,
+        role: 'assistant',
+        title: 'Welcome! 👋',
+        content: welcomeMessage.content,
+        timestamp: welcomeMessage.timestamp
+      }])
+    } catch (error) {
+      console.error('Failed to start new session:', error)
+    }
+  }
+
+  const handleSessionSelect = (sessionId: string) => {
+    if (!user?.id) return
+    
+    const userSessions = chatHistoryManager.getUserSessions(user.id)
+    const session = userSessions.find(s => s.id === sessionId)
+    
+    if (session) {
+      setCurrentSessionId(sessionId)
+      const convertedMessages = session.messages.map((msg: ChatMessage) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        title: msg.metadata?.intent,
+        timestamp: msg.timestamp,
+        rating: msg.metadata?.rating
+      }))
+      setMessages(convertedMessages)
+    }
+  }
+
+  const handleMessageRating = async (messageId: string, rating: number, feedback?: string) => {
+    if (!user?.id || !currentSessionId) return
+    
+    // Update local state
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, rating } : msg
+    ))
+    
+    // Find the message and update its rating in chat history
+    try {
+      const userSessions = chatHistoryManager.getUserSessions(user.id)
+      const session = userSessions.find(s => s.id === currentSessionId)
+      
+      if (session) {
+        const message = session.messages.find(m => m.id === messageId)
+        if (message) {
+          message.metadata = { ...message.metadata, rating }
+          
+          // If bad rating with feedback, the ChatHistoryManager will handle learning automatically
+          await chatHistoryManager.addMessage(user.id, currentSessionId, message)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update message rating:', error)
+    }
+  }
 
   async function handleSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault()
     const query = input.trim()
     if (!query) return
 
-    setMessages(prev => [...prev, { role: 'user', content: query }])
+    const messageId = `msg_${Date.now()}`
+    const timestamp = new Date()
+
+    // Add user message to UI
+    const userMessage = {
+      id: messageId,
+      role: 'user' as const,
+      content: query,
+      timestamp
+    }
+    setMessages(prev => [...prev, userMessage])
     setInput('')
     setLoading(true)
 
+    // Save user message to chat history if logged in
+    if (user?.id && currentSessionId) {
+      try {
+        const chatMessage: ChatMessage = {
+          id: messageId,
+          role: 'user',
+          content: query,
+          timestamp
+        }
+        await chatHistoryManager.addMessage(user.id, currentSessionId, chatMessage)
+      } catch (error) {
+        console.error('Failed to save user message:', error)
+      }
+    }
+
     // Simulate brief thinking time for better UX
-    setTimeout(() => {
+    setTimeout(async () => {
       const result = searchKnowledgeBase(query)
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
+      const assistantMessageId = `msg_${Date.now()}_assistant`
+      const assistantTimestamp = new Date()
+      
+      const assistantMessage = { 
+        id: assistantMessageId,
+        role: 'assistant' as const, 
         title: result.title,
-        content: result.content 
-      }])
+        content: result.content,
+        timestamp: assistantTimestamp
+      }
+      
+      setMessages(prev => [...prev, assistantMessage])
       setLoading(false)
+
+      // Save assistant message to chat history if logged in
+      if (user?.id && currentSessionId) {
+        try {
+          const chatMessage: ChatMessage = {
+            id: assistantMessageId,
+            role: 'assistant',
+            content: result.content,
+            timestamp: assistantTimestamp,
+            metadata: {
+              intent: result.title,
+              confidence: result.relevance / 5 // Convert to 0-1 scale
+            }
+          }
+          await chatHistoryManager.addMessage(user.id, currentSessionId, chatMessage)
+        } catch (error) {
+          console.error('Failed to save assistant message:', error)
+        }
+      }
     }, 500)
   }
 
@@ -389,26 +569,60 @@ What would you like to know?`
   ], [])
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-blue-50">
-      <Card className="w-full max-w-4xl shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
-          <div className="flex items-center gap-3">
-            <Search className="h-6 w-6" />
-            <div>
-              <CardTitle className="text-xl">AI Project Assistant</CardTitle>
-              <CardDescription className="text-blue-100">
-                Your intelligent guide to my development services, technical expertise, and project process
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Chat Sidebar */}
+      {user?.id && (
+        <ChatSidebar
+          userId={user.id}
+          currentSessionId={currentSessionId}
+          onSessionSelect={handleSessionSelect}
+          onNewSession={startNewSession}
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+      )}
+
+      {/* Main Content */}
+      <div className={`min-h-screen transition-all duration-300 ${sidebarOpen && user?.id ? 'ml-80' : 'ml-0'}`}>
+        <div className="flex items-center justify-center p-4">
+          <Card className="w-full max-w-4xl shadow-xl">
+            <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {/* Sidebar Toggle Button - Only for logged in users */}
+                  {user?.id && (
+                    <button
+                      onClick={() => setSidebarOpen(!sidebarOpen)}
+                      className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                      title="Toggle chat history"
+                    >
+                      <Menu className="h-4 w-4" />
+                      <span className="hidden sm:inline">Chats</span>
+                    </button>
+                  )}
+                  
+                  <div className="flex items-center gap-2">
+                    <Search className="h-6 w-6" />
+                    <Brain className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">Smart AI Assistant</CardTitle>
+                    <CardDescription className="text-blue-100">
+                      {user ? 'Remembers our conversations • Learns from feedback' : 'Your intelligent guide to development services'}
+                    </CardDescription>
+                  </div>
+                </div>
+                
+                {/* Remove old Chat History component since we're using sidebar now */}
+              </div>
+            </CardHeader>
         
         <CardContent className="p-6">
           <div className="space-y-6">
             {/* Messages Area */}
             <div className="space-y-4 max-h-[60vh] overflow-y-auto border rounded-lg p-4 bg-gradient-to-b from-white to-slate-50">
               {messages.map((message, index) => (
-                <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[80%] rounded-lg p-4 ${
                     message.role === 'user' 
                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' 
@@ -423,6 +637,22 @@ What would you like to know?`
                     <div className="whitespace-pre-line text-sm leading-relaxed">
                       {message.content}
                     </div>
+                    
+                    {/* Rating Component for Assistant Messages (only if user is logged in) */}
+                    {message.role === 'assistant' && user?.id && (
+                      <MessageRating
+                        messageId={message.id}
+                        initialRating={message.rating || 0}
+                        onRate={(rating, feedback) => handleMessageRating(message.id, rating, feedback)}
+                        disabled={false}
+                        showFeedback={true}
+                      />
+                    )}
+                    
+                    {/* Timestamp */}
+                    <div className="text-xs text-gray-400 mt-2">
+                      {message.timestamp.toLocaleTimeString()}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -432,7 +662,7 @@ What would you like to know?`
                   <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
                     <div className="flex items-center gap-2 text-slate-600">
                       <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                      Searching knowledge base...
+                      {user ? 'Thinking and learning...' : 'Searching knowledge base...'}
                     </div>
                   </div>
                 </div>
@@ -481,18 +711,37 @@ What would you like to know?`
             {/* Navigation */}
             <div className="flex justify-between items-center pt-4 border-t border-slate-200">
               <div className="text-xs text-slate-500">
-                Powered by comprehensive local knowledge base - no external APIs required
+                {user ? (
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-3 w-3 text-green-500" />
+                    AI with persistent memory • Learns from your feedback
+                  </div>
+                ) : (
+                  'Powered by comprehensive local knowledge base - no external APIs required'
+                )}
               </div>
-              <Link 
-                to="/" 
-                className="text-blue-600 hover:text-blue-800 font-medium text-sm underline"
-              >
-                ← Back to Portfolio
-              </Link>
+              <div className="flex items-center gap-3">
+                {!user && (
+                  <Link 
+                    to="/auth" 
+                    className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+                  >
+                    Login for Smart Memory
+                  </Link>
+                )}
+                <Link 
+                  to="/" 
+                  className="text-blue-600 hover:text-blue-800 font-medium text-sm underline"
+                >
+                  ← Back to Portfolio
+                </Link>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
+        </div>
+      </div>
     </div>
   )
 }

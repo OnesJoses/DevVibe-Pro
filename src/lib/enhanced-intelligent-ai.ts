@@ -1,6 +1,7 @@
 import { vectorKnowledge } from './vector-knowledge-engine'
 import { webLearning } from './web-learning-engine'
 import { persistentStorage } from './persistent-storage-engine'
+import { historyManager } from './history-manager'
 
 export class EnhancedIntelligentAI {
   private conversationHistory: Array<{question: string, answer: string, timestamp: number}> = []
@@ -49,11 +50,15 @@ export class EnhancedIntelligentAI {
       const similarContent = await vectorKnowledge.findSimilarContent(query, 0.6)
       console.log('🔍 ChromaDB results:', similarContent.length)
       
-      // 3. Search stored conversations in IndexedDB
-      const similarConversations = await persistentStorage.findSimilarConversations(query, 3)
-      console.log('💬 Similar conversations:', similarConversations.length)
+      // 3. Search stored conversations using History Manager (replaces IndexedDB search)
+      const similarConversations = await historyManager.findSimilarConversations(query, 3)
+      console.log('💬 Similar conversations from memory:', similarConversations.length)
       
-      // 4. If no good local knowledge and it's not a simple/core question, search web and learn
+      // 4. Also check IndexedDB for compatibility
+      const legacyConversations = await persistentStorage.findSimilarConversations(query, 2)
+      console.log('📚 Legacy conversations:', legacyConversations.length)
+      
+      // 5. If no good local knowledge and it's not a simple/core question, search web and learn
       let webResults: any[] = []
       let newConcepts: string[] = []
       
@@ -66,7 +71,8 @@ export class EnhancedIntelligentAI {
         intent.type !== 'technical' &&
         intent.type !== 'pricing' &&
         intent.type !== 'portfolio' &&
-        (similarContent.length === 0 || similarContent[0].similarity < 0.6) // Lowered threshold
+        (similarContent.length === 0 || similarContent[0].similarity < 0.6) && // Lowered threshold
+        (similarConversations.length === 0 || similarConversations[0].metadata.confidence < 0.6) // Check memory confidence
       
       if (shouldSearchWeb) {
         console.log('🌐 Searching web for new information...')
@@ -97,20 +103,35 @@ export class EnhancedIntelligentAI {
         console.log('💬 Simple conversational query - skipping web search')
       }
       
-      // 5. Generate comprehensive answer
+      // 6. Generate comprehensive answer using memory-enhanced context
       const answer = await this.generateComprehensiveAnswer(
         query,
         intent,
         similarContent,
-        similarConversations,
+        [...similarConversations, ...legacyConversations], // Combine memory sources
         webResults
       )
       
-      // 6. Calculate confidence
+      // 7. Calculate confidence with memory boost
       const confidence = this.calculateConfidence(similarContent, similarConversations, webResults, intent)
       
-      // 7. Determine sources
-      const sources = this.determineSources(similarContent, similarConversations, webResults)
+      // 8. Determine sources including memory
+      const sources = this.determineSources(similarContent, [...similarConversations, ...legacyConversations], webResults)
+      
+      // 9. Store this conversation in History Manager for future learning
+      const responseTime = Date.now() - (performance.now() || Date.now())
+      const conversationId = await historyManager.storeConversation(
+        query,
+        answer,
+        {
+          confidence,
+          sources,
+          responseTime,
+          intent: intent.type
+        }
+      )
+      
+      console.log(`💾 Conversation stored in memory: ${conversationId}`)
       
       return {
         answer,
@@ -119,15 +140,17 @@ export class EnhancedIntelligentAI {
         newLearning: {
           concepts: newConcepts,
           webResults,
-          similarConversations
+          similarConversations: [...similarConversations, ...legacyConversations]
         },
         metadata: {
           intent,
           vectorResults: similarContent.length,
-          conversationMatches: similarConversations.length,
+          conversationMatches: similarConversations.length + legacyConversations.length,
           webSearchPerformed: webResults.length > 0,
           totalSources: sources.length,
-          chromaDBUsed: true
+          chromaDBUsed: true,
+          memoryUsed: similarConversations.length > 0,
+          conversationId
         }
       }
       
@@ -168,8 +191,17 @@ export class EnhancedIntelligentAI {
         )
       }
       
-      // Store in persistent storage (IndexedDB)
+      // Store in persistent storage (IndexedDB) for compatibility
       await persistentStorage.storeConversation(question, answer, feedback, metadata)
+      
+      // Record feedback in History Manager for enhanced learning
+      if (metadata.conversationId) {
+        await historyManager.recordFeedback(
+          metadata.conversationId,
+          feedback,
+          metadata.comments
+        )
+      }
       
       // Learn vector representations
       await vectorKnowledge.learnFromInteraction(question, answer, feedback, 'user_feedback')
@@ -193,19 +225,21 @@ export class EnhancedIntelligentAI {
     }
   }
 
-  // Get comprehensive learning insights including ChromaDB stats
+  // Get comprehensive learning insights including ChromaDB stats and History Manager
   async getLearningInsights(): Promise<{
     chromaDB: any
     storage: any
     vector: any
     web: any
+    memory: any
     performance: any
   }> {
-    const [chromaStats, storageAnalytics, vectorInsights, webInsights] = await Promise.all([
+    const [chromaStats, storageAnalytics, vectorInsights, webInsights, memoryInsights] = await Promise.all([
       vectorKnowledge.getCollectionStats(),
       persistentStorage.getLearningAnalytics(),
       vectorKnowledge.getVocabularyInsights(),
-      webLearning.getConceptInsights()
+      webLearning.getConceptInsights(),
+      historyManager.getMemoryInsights()
     ])
     
     const performance = {
@@ -215,7 +249,8 @@ export class EnhancedIntelligentAI {
         : 0,
       learningRate: this.calculateLearningRate(),
       memoryUsage: this.estimateMemoryUsage(),
-      chromaDBActive: await vectorKnowledge.testConnection()
+      chromaDBActive: await vectorKnowledge.testConnection(),
+      historyManagerStatus: historyManager.getMemoryStatus()
     }
     
     return {
@@ -223,6 +258,7 @@ export class EnhancedIntelligentAI {
       storage: storageAnalytics,
       vector: vectorInsights,
       web: webInsights,
+      memory: memoryInsights,
       performance
     }
   }

@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Manager Test - Core Memory Engine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .status-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .status-indicator {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .status-success { background: #27ae60; color: white; }
+        .status-warning { background: #f39c12; color: white; }
+        .status-info { background: #3498db; color: white; }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .test-section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .test-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .test-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .test-card h3 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .test-result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .result-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .chat-section {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+        }
+
+        .ai-message {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #495057;
+        }
+
+        .message-meta {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 8px;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .analytics-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 History Manager Test Suite</h1>
+            <p>Core Memory Engine - Real-time Testing & Integration Demo</p>
+        </div>
+
+        <!-- System Status -->
+        <div class="status-grid">
+            <div class="status-card">
+                <div class="status-indicator status-info" id="initStatus">🔄</div>
+                <div class="metric-value" id="initStatusText">Initializing</div>
+                <div class="metric-label">System Status</div>
+            </div>
+            <div class="status-card">
+                <div class="status-indicator status-success">💾</div>
+                <div class="metric-value" id="cacheSize">0</div>
+                <div class="metric-label">Conversations Cached</div>
+            </div>
+            <div class="status-card">
+                <div class="status-indicator status-info">📊</div>
+                <div class="metric-value" id="hitRate">0%</div>
+                <div class="metric-label">Cache Hit Rate</div>
+            </div>
+            <div class="status-card">
+                <div class="status-indicator status-warning">🧹</div>
+                <div class="metric-value" id="memoryUsage">Low</div>
+                <div class="metric-label">Memory Usage</div>
+            </div>
+        </div>
+
+        <!-- Core Tests -->
+        <div class="test-section">
+            <h2>🔧 Core Memory Functions</h2>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3>Store Conversation</h3>
+                    <p>Test storing conversations with metadata and categorization</p>
+                    <button class="test-button" onclick="testStoreConversation()">Test Store</button>
+                    <div id="storeResult" class="test-result"></div>
+                </div>
+                
+                <div class="test-card">
+                    <h3>Record Feedback</h3>
+                    <p>Test learning from user feedback ratings</p>
+                    <button class="test-button" onclick="testRecordFeedback()">Test Feedback</button>
+                    <div id="feedbackResult" class="test-result"></div>
+                </div>
+                
+                <div class="test-card">
+                    <h3>Find Similar</h3>
+                    <p>Test intelligent conversation retrieval</p>
+                    <button class="test-button" onclick="testFindSimilar()">Test Search</button>
+                    <div id="similarResult" class="test-result"></div>
+                </div>
+                
+                <div class="test-card">
+                    <h3>Memory Insights</h3>
+                    <p>Test analytics and learning insights</p>
+                    <button class="test-button" onclick="testMemoryInsights()">Get Insights</button>
+                    <div id="insightsResult" class="test-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Tests -->
+        <div class="test-section">
+            <h2>🚀 Advanced Features</h2>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3>Conversation Clusters</h3>
+                    <p>Test topic-based conversation grouping</p>
+                    <button class="test-button" onclick="testConversationClusters()">Get Clusters</button>
+                    <div id="clustersResult" class="test-result"></div>
+                </div>
+                
+                <div class="test-card">
+                    <h3>Memory Optimization</h3>
+                    <p>Test automatic memory cleanup</p>
+                    <button class="test-button" onclick="testMemoryOptimization()">Optimize</button>
+                    <div id="optimizeResult" class="test-result"></div>
+                </div>
+                
+                <div class="test-card">
+                    <h3>Export Data</h3>
+                    <p>Test conversation history export</p>
+                    <button class="test-button" onclick="testExportData('json')">Export JSON</button>
+                    <button class="test-button" onclick="testExportData('csv')">Export CSV</button>
+                    <div id="exportResult" class="test-result"></div>
+                </div>
+                
+                <div class="test-card">
+                    <h3>Memory Status</h3>
+                    <p>Test real-time memory monitoring</p>
+                    <button class="test-button" onclick="testMemoryStatus()">Get Status</button>
+                    <div id="statusResult" class="test-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Chat -->
+        <div class="chat-section">
+            <h2>💬 Interactive Memory Test Chat</h2>
+            <div class="chat-container" id="chatContainer">
+                <div class="message ai-message">
+                    <div>👋 Hello! I'm your AI with enhanced memory capabilities. Ask me anything and I'll remember our conversation!</div>
+                    <div class="message-meta">AI Assistant • Memory Active • 0ms</div>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything... I'll remember our conversation!" onkeypress="handleChatEnter(event)">
+                <button class="test-button" onclick="sendChatMessage()">Send</button>
+                <button class="test-button" onclick="clearChat()">Clear</button>
+            </div>
+            
+            <!-- Analytics Dashboard -->
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <div class="metric-value" id="totalConversations">0</div>
+                    <div class="metric-label">Total Conversations</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="metric-value" id="averageConfidence">0%</div>
+                    <div class="metric-label">Average Confidence</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="metric-value" id="sessionConversations">0</div>
+                    <div class="metric-label">This Session</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="metric-value" id="responseTime">0ms</div>
+                    <div class="metric-label">Avg Response Time</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock History Manager for browser testing
+        class MockHistoryManager {
+            constructor() {
+                this.conversations = new Map();
+                this.stats = {
+                    totalQueries: 0,
+                    cacheHits: 0,
+                    lastCleanup: Date.now(),
+                    sessionConversations: 0
+                };
+                this.sessionId = `session_${Date.now()}`;
+                this.isInitialized = true;
+                console.log('✅ Mock History Manager initialized');
+            }
+
+            async storeConversation(question, answer, metadata) {
+                const id = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+                const conversation = {
+                    id,
+                    question,
+                    answer,
+                    timestamp: Date.now(),
+                    metadata: {
+                        confidence: metadata.confidence || 0.8,
+                        sources: metadata.sources || ['test'],
+                        category: this.categorizeConversation(question, answer),
+                        importance: this.calculateImportance(question, answer, metadata.confidence || 0.8),
+                        responseTime: metadata.responseTime || Math.random() * 1000
+                    },
+                    tags: this.extractTags(question + ' ' + answer),
+                    sessionId: this.sessionId
+                };
+                
+                this.conversations.set(id, conversation);
+                this.stats.sessionConversations++;
+                return id;
+            }
+
+            async recordFeedback(conversationId, rating, comments) {
+                const conversation = this.conversations.get(conversationId);
+                if (conversation) {
+                    conversation.feedback = {
+                        rating,
+                        comments,
+                        timestamp: Date.now()
+                    };
+                    console.log(`📝 Feedback recorded: ${rating}/5`);
+                }
+            }
+
+            async findSimilarConversations(query, limit = 5) {
+                const results = [];
+                const queryWords = query.toLowerCase().split(/\s+/);
+                
+                for (const conv of this.conversations.values()) {
+                    const searchText = (conv.question + ' ' + conv.answer).toLowerCase();
+                    let score = 0;
+                    
+                    for (const word of queryWords) {
+                        if (searchText.includes(word)) score += 1;
+                    }
+                    
+                    if (score > 0) {
+                        results.push({ ...conv, similarity: score / queryWords.length });
+                    }
+                }
+                
+                this.stats.totalQueries++;
+                if (results.length > 0) this.stats.cacheHits++;
+                
+                return results
+                    .sort((a, b) => b.similarity - a.similarity)
+                    .slice(0, limit);
+            }
+
+            async getConversationClusters() {
+                const clusters = new Map();
+                
+                for (const conv of this.conversations.values()) {
+                    const category = conv.metadata.category;
+                    if (!clusters.has(category)) {
+                        clusters.set(category, []);
+                    }
+                    clusters.get(category).push(conv);
+                }
+                
+                return Array.from(clusters.entries()).map(([topic, conversations]) => ({
+                    id: `cluster_${topic}`,
+                    topic,
+                    conversations,
+                    totalInteractions: conversations.length,
+                    averageRating: conversations
+                        .filter(c => c.feedback?.rating)
+                        .reduce((sum, c, _, arr) => sum + c.feedback.rating / arr.length, 0),
+                    lastAccessed: Math.max(...conversations.map(c => c.timestamp)),
+                    importance: conversations.reduce((sum, c) => sum + c.metadata.importance, 0) / conversations.length
+                }));
+            }
+
+            async getMemoryInsights() {
+                const conversations = Array.from(this.conversations.values());
+                const totalConversations = conversations.length;
+                const averageConfidence = conversations.length > 0 
+                    ? conversations.reduce((sum, c) => sum + c.metadata.confidence, 0) / conversations.length 
+                    : 0;
+                
+                const categoryCounts = {};
+                conversations.forEach(c => {
+                    categoryCounts[c.metadata.category] = (categoryCounts[c.metadata.category] || 0) + 1;
+                });
+                
+                const topTopics = Object.entries(categoryCounts)
+                    .map(([topic, count]) => ({ topic, count }))
+                    .sort((a, b) => b.count - a.count);
+                
+                return {
+                    totalConversations,
+                    averageConfidence,
+                    topTopics,
+                    learningTrends: [
+                        { date: new Date().toISOString().split('T')[0], newLearnings: totalConversations }
+                    ],
+                    memoryHealth: {
+                        status: totalConversations > 50 ? 'good' : 'excellent',
+                        usage: totalConversations > 100 ? 'Medium' : 'Low',
+                        lastCleanup: this.stats.lastCleanup
+                    },
+                    performanceMetrics: {
+                        averageResponseTime: conversations.length > 0 
+                            ? conversations.reduce((sum, c) => sum + c.metadata.responseTime, 0) / conversations.length 
+                            : 0,
+                        cacheHitRate: this.stats.totalQueries > 0 
+                            ? (this.stats.cacheHits / this.stats.totalQueries) * 100 
+                            : 0,
+                        memoryEfficiency: 0.85
+                    }
+                };
+            }
+
+            async optimizeMemory() {
+                const before = {
+                    conversations: this.conversations.size,
+                    cacheSize: JSON.stringify(Array.from(this.conversations.values())).length
+                };
+                
+                // Mock cleanup - remove old low-importance conversations
+                const toRemove = [];
+                for (const [id, conv] of this.conversations) {
+                    if (conv.metadata.importance < 0.3 && Date.now() - conv.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                        toRemove.push(id);
+                    }
+                }
+                
+                toRemove.forEach(id => this.conversations.delete(id));
+                
+                const after = {
+                    conversations: this.conversations.size,
+                    cacheSize: JSON.stringify(Array.from(this.conversations.values())).length
+                };
+                
+                this.stats.lastCleanup = Date.now();
+                
+                return { before, after, cleaned: toRemove.length };
+            }
+
+            async exportConversationHistory(format = 'json') {
+                const conversations = Array.from(this.conversations.values());
+                
+                if (format === 'csv') {
+                    const headers = ['ID', 'Question', 'Answer', 'Timestamp', 'Category', 'Confidence'];
+                    const rows = conversations.map(c => [
+                        c.id,
+                        `"${c.question.replace(/"/g, '""')}"`,
+                        `"${c.answer.replace(/"/g, '""')}"`,
+                        new Date(c.timestamp).toISOString(),
+                        c.metadata.category,
+                        c.metadata.confidence
+                    ]);
+                    return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+                }
+                
+                return JSON.stringify({
+                    exportDate: new Date().toISOString(),
+                    sessionId: this.sessionId,
+                    totalConversations: conversations.length,
+                    conversations
+                }, null, 2);
+            }
+
+            getMemoryStatus() {
+                return {
+                    isInitialized: this.isInitialized,
+                    sessionId: this.sessionId,
+                    cacheSize: this.conversations.size,
+                    totalQueries: this.stats.totalQueries,
+                    cacheHitRate: this.stats.totalQueries > 0 
+                        ? (this.stats.cacheHits / this.stats.totalQueries) * 100 
+                        : 0,
+                    memoryUsage: this.conversations.size > 100 ? 'Medium' : 'Low',
+                    lastCleanup: this.stats.lastCleanup
+                };
+            }
+
+            // Helper methods
+            categorizeConversation(question, answer) {
+                const text = (question + ' ' + answer).toLowerCase();
+                if (text.includes('pricing') || text.includes('cost')) return 'pricing';
+                if (text.includes('service') || text.includes('feature')) return 'services';
+                if (text.includes('technical') || text.includes('code')) return 'technical';
+                if (text.includes('project')) return 'projects';
+                return 'general';
+            }
+
+            calculateImportance(question, answer, confidence) {
+                let importance = confidence * 0.5;
+                const text = (question + ' ' + answer).toLowerCase();
+                if (text.includes('pricing') || text.includes('service')) importance += 0.3;
+                if (answer.length > 200) importance += 0.1;
+                return Math.min(importance, 1.0);
+            }
+
+            extractTags(text) {
+                return text.toLowerCase()
+                    .replace(/[^\w\s]/g, ' ')
+                    .split(/\s+/)
+                    .filter(word => word.length > 3)
+                    .slice(0, 10);
+            }
+
+            // Mock AI response generation
+            generateResponse(question) {
+                const responses = {
+                    'pricing': 'Our pricing is flexible and depends on your specific needs. Would you like to discuss your project requirements?',
+                    'services': 'We offer full-stack development, AI integration, cloud deployment, and consulting services.',
+                    'technical': 'I can help with React, TypeScript, Node.js, Python, AI/ML, and cloud technologies.',
+                    'general': 'I\'m here to help with any questions about our services, pricing, or technical capabilities.'
+                };
+                
+                const category = this.categorizeConversation(question, '');
+                const baseResponse = responses[category] || responses.general;
+                
+                return {
+                    answer: baseResponse,
+                    confidence: 0.8 + Math.random() * 0.2,
+                    sources: ['knowledge_base'],
+                    responseTime: 200 + Math.random() * 800
+                };
+            }
+        }
+
+        // Initialize mock history manager
+        const historyManager = new MockHistoryManager();
+
+        // Update system status
+        function updateSystemStatus() {
+            const status = historyManager.getMemoryStatus();
+            
+            document.getElementById('initStatusText').textContent = status.isInitialized ? 'Ready' : 'Initializing';
+            document.getElementById('cacheSize').textContent = status.cacheSize;
+            document.getElementById('hitRate').textContent = `${status.cacheHitRate.toFixed(1)}%`;
+            document.getElementById('memoryUsage').textContent = status.memoryUsage;
+            
+            // Update status indicator
+            const indicator = document.getElementById('initStatus');
+            if (status.isInitialized) {
+                indicator.textContent = '✅';
+                indicator.className = 'status-indicator status-success';
+            }
+        }
+
+        // Test functions
+        window.testStoreConversation = async function() {
+            const result = document.getElementById('storeResult');
+            result.className = 'test-result result-info';
+            result.innerHTML = '<div class="loading">⏳</div> Storing conversation...';
+            
+            try {
+                const testQuestions = [
+                    'What are your pricing options for web development?',
+                    'Can you help with React and TypeScript projects?',
+                    'Do you offer cloud deployment services?',
+                    'What is your experience with AI integration?'
+                ];
+                
+                const question = testQuestions[Math.floor(Math.random() * testQuestions.length)];
+                const response = historyManager.generateResponse(question);
+                
+                const conversationId = await historyManager.storeConversation(
+                    question,
+                    response.answer,
+                    {
+                        confidence: response.confidence,
+                        sources: response.sources,
+                        responseTime: response.responseTime
+                    }
+                );
+                
+                result.className = 'test-result result-success';
+                result.innerHTML = `
+                    <strong>✅ Conversation Stored Successfully!</strong><br>
+                    <strong>ID:</strong> ${conversationId}<br>
+                    <strong>Question:</strong> ${question}<br>
+                    <strong>Category:</strong> ${historyManager.categorizeConversation(question, response.answer)}<br>
+                    <strong>Confidence:</strong> ${(response.confidence * 100).toFixed(1)}%
+                `;
+                
+                updateSystemStatus();
+                updateAnalytics();
+                
+            } catch (error) {
+                result.className = 'test-result result-error';
+                result.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        };
+
+        window.testRecordFeedback = async function() {
+            const result = document.getElementById('feedbackResult');
+            result.className = 'test-result result-info';
+            result.innerHTML = '<div class="loading">⏳</div> Recording feedback...';
+            
+            try {
+                // First store a conversation
+                const question = 'Test feedback question about pricing';
+                const response = historyManager.generateResponse(question);
+                const conversationId = await historyManager.storeConversation(question, response.answer, {
+                    confidence: response.confidence,
+                    sources: response.sources,
+                    responseTime: response.responseTime
+                });
+                
+                // Then add feedback
+                const rating = Math.floor(Math.random() * 5) + 1;
+                const comments = rating >= 4 ? 'Very helpful response!' : 'Could be more detailed';
+                
+                await historyManager.recordFeedback(conversationId, rating, comments);
+                
+                result.className = 'test-result result-success';
+                result.innerHTML = `
+                    <strong>✅ Feedback Recorded Successfully!</strong><br>
+                    <strong>Conversation ID:</strong> ${conversationId}<br>
+                    <strong>Rating:</strong> ${rating}/5 ⭐<br>
+                    <strong>Comments:</strong> ${comments}<br>
+                    <em>AI will learn from this feedback to improve future responses!</em>
+                `;
+                
+            } catch (error) {
+                result.className = 'test-result result-error';
+                result.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        };
+
+        window.testFindSimilar = async function() {
+            const result = document.getElementById('similarResult');
+            result.className = 'test-result result-info';
+            result.innerHTML = '<div class="loading">⏳</div> Finding similar conversations...';
+            
+            try {
+                // First ensure we have some conversations
+                const testData = [
+                    'What are your web development pricing options?',
+                    'Can you build React applications?',
+                    'Do you offer TypeScript development services?',
+                    'What is your pricing for mobile apps?'
+                ];
+                
+                for (const question of testData) {
+                    const response = historyManager.generateResponse(question);
+                    await historyManager.storeConversation(question, response.answer, {
+                        confidence: response.confidence,
+                        sources: response.sources,
+                        responseTime: response.responseTime
+                    });
+                }
+                
+                // Now search for similar conversations
+                const searchQuery = 'pricing development';
+                const similar = await historyManager.findSimilarConversations(searchQuery, 3);
+                
+                result.className = 'test-result result-success';
+                result.innerHTML = `
+                    <strong>✅ Found ${similar.length} Similar Conversations!</strong><br>
+                    <strong>Search Query:</strong> "${searchQuery}"<br><br>
+                    ${similar.map((conv, i) => `
+                        <strong>${i + 1}. Similarity: ${(conv.similarity * 100).toFixed(1)}%</strong><br>
+                        <em>Q:</em> ${conv.question}<br>
+                        <em>Category:</em> ${conv.metadata.category}<br><br>
+                    `).join('')}
+                `;
+                
+                updateSystemStatus();
+                
+            } catch (error) {
+                result.className = 'test-result result-error';
+                result.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        };
+
+        window.testMemoryInsights = async function() {
+            const result = document.getElementById('insightsResult');
+            result.className = 'test-result result-info';
+            result.innerHTML = '<div class="loading">⏳</div> Generating memory insights...';
+            
+            try {
+                const insights = await historyManager.getMemoryInsights();
+                
+                result.className = 'test-result result-success';
+                result.innerHTML = `
+                    <strong>✅ Memory Insights Generated!</strong><br><br>
+                    <strong>📊 Statistics:</strong><br>
+                    • Total Conversations: ${insights.totalConversations}<br>
+                    • Average Confidence: ${(insights.averageConfidence * 100).toFixed(1)}%<br>
+                    • Memory Health: ${insights.memoryHealth.status} (${insights.memoryHealth.usage})<br><br>
+                    
+                    <strong>🏆 Top Topics:</strong><br>
+                    ${insights.topTopics.slice(0, 3).map(topic => 
+                        `• ${topic.topic}: ${topic.count} conversations`
+                    ).join('<br>')}<br><br>
+                    
+                    <strong>⚡ Performance:</strong><br>
+                    • Avg Response Time: ${insights.performanceMetrics.averageResponseTime.toFixed(0)}ms<br>
+                    • Cache Hit Rate: ${insights.performanceMetrics.cacheHitRate.toFixed(1)}%<br>
+                    • Memory Efficiency: ${(insights.performanceMetrics.memoryEfficiency * 100).toFixed(1)}%
+                `;
+                
+            } catch (error) {
+                result.className = 'test-result result-error';
+                result.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        };
+
+        window.testConversationClusters = async function() {
+            const result = document.getElementById('clustersResult');
+            result.className = 'test-result result-info';
+            result.innerHTML = '<div class="loading">⏳</div> Analyzing conversation clusters...';
+            
+            try {
+                const clusters = await historyManager.getConversationClusters();
+                
+                result.className = 'test-result result-success';
+                result.innerHTML = `
+                    <strong>✅ Found ${clusters.length} Conversation Clusters!</strong><br><br>
+                    ${clusters.map((cluster, i) => `
+                        <strong>${i + 1}. ${cluster.topic.toUpperCase()}</strong><br>
+                        • Conversations: ${cluster.totalInteractions}<br>
+                        • Importance: ${(cluster.importance * 100).toFixed(1)}%<br>
+                        • Last Active: ${new Date(cluster.lastAccessed).toLocaleString()}<br><br>
+                    `).join('')}
+                `;
+                
+            } catch (error) {
+                result.className = 'test-result result-error';
+                result.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        };
+
+        window.testMemoryOptimization = async function() {
+            const result = document.getElementById('optimizeResult');
+            result.className = 'test-result result-info';
+            result.innerHTML = '<div class="loading">⏳</div> Optimizing memory...';
+            
+            try {
+                const optimization = await historyManager.optimizeMemory();
+                
+                result.className = 'test-result result-success';
+                result.innerHTML = `
+                    <strong>✅ Memory Optimization Complete!</strong><br><br>
+                    <strong>📊 Before:</strong><br>
+                    • Conversations: ${optimization.before.conversations}<br>
+                    • Cache Size: ${(optimization.before.cacheSize / 1024).toFixed(1)} KB<br><br>
+                    
+                    <strong>📊 After:</strong><br>
+                    • Conversations: ${optimization.after.conversations}<br>
+                    • Cache Size: ${(optimization.after.cacheSize / 1024).toFixed(1)} KB<br><br>
+                    
+                    <strong>🧹 Cleaned:</strong> ${optimization.cleaned} old conversations<br>
+                    <strong>💾 Space Saved:</strong> ${((optimization.before.cacheSize - optimization.after.cacheSize) / 1024).toFixed(1)} KB
+                `;
+                
+                updateSystemStatus();
+                
+            } catch (error) {
+                result.className = 'test-result result-error';
+                result.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        };
+
+        window.testExportData = async function(format) {
+            const result = document.getElementById('exportResult');
+            result.className = 'test-result result-info';
+            result.innerHTML = `<div class="loading">⏳</div> Exporting data as ${format.toUpperCase()}...`;
+            
+            try {
+                const exportData = await historyManager.exportConversationHistory(format);
+                const blob = new Blob([exportData], { 
+                    type: format === 'csv' ? 'text/csv' : 'application/json' 
+                });
+                const url = URL.createObjectURL(blob);
+                
+                result.className = 'test-result result-success';
+                result.innerHTML = `
+                    <strong>✅ Export Generated Successfully!</strong><br>
+                    <strong>Format:</strong> ${format.toUpperCase()}<br>
+                    <strong>Size:</strong> ${(exportData.length / 1024).toFixed(1)} KB<br>
+                    <a href="${url}" download="conversation_history.${format}" style="color: #667eea; text-decoration: none;">
+                        📥 Download ${format.toUpperCase()} File
+                    </a><br><br>
+                    <strong>Preview:</strong><br>
+                    <div style="max-height: 100px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 0.8rem;">
+                        ${exportData.substring(0, 500)}${exportData.length > 500 ? '...' : ''}
+                    </div>
+                `;
+                
+            } catch (error) {
+                result.className = 'test-result result-error';
+                result.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        };
+
+        window.testMemoryStatus = async function() {
+            const result = document.getElementById('statusResult');
+            result.className = 'test-result result-info';
+            result.innerHTML = '<div class="loading">⏳</div> Getting memory status...';
+            
+            try {
+                const status = historyManager.getMemoryStatus();
+                
+                result.className = 'test-result result-success';
+                result.innerHTML = `
+                    <strong>✅ Memory Status Retrieved!</strong><br><br>
+                    <strong>🔧 System Status:</strong><br>
+                    • Initialized: ${status.isInitialized ? '✅ Yes' : '❌ No'}<br>
+                    • Session ID: ${status.sessionId}<br>
+                    • Cache Size: ${status.cacheSize} conversations<br><br>
+                    
+                    <strong>📊 Performance:</strong><br>
+                    • Total Queries: ${status.totalQueries}<br>
+                    • Cache Hit Rate: ${status.cacheHitRate.toFixed(1)}%<br>
+                    • Memory Usage: ${status.memoryUsage}<br><br>
+                    
+                    <strong>🧹 Maintenance:</strong><br>
+                    • Last Cleanup: ${new Date(status.lastCleanup).toLocaleString()}
+                `;
+                
+            } catch (error) {
+                result.className = 'test-result result-error';
+                result.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        };
+
+        // Chat functionality
+        let chatHistory = [];
+
+        window.sendChatMessage = async function() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            addChatMessage(message, 'user');
+            input.value = '';
+            
+            // Show typing indicator
+            const typingId = addChatMessage('AI is thinking...', 'ai', true);
+            
+            // Simulate AI processing
+            setTimeout(async () => {
+                const startTime = Date.now();
+                
+                // Generate AI response
+                const response = historyManager.generateResponse(message);
+                const responseTime = Date.now() - startTime + response.responseTime;
+                
+                // Store conversation in memory
+                const conversationId = await historyManager.storeConversation(
+                    message,
+                    response.answer,
+                    {
+                        confidence: response.confidence,
+                        sources: response.sources,
+                        responseTime: responseTime
+                    }
+                );
+                
+                // Remove typing indicator and add real response
+                document.getElementById(typingId).remove();
+                addChatMessage(
+                    response.answer, 
+                    'ai', 
+                    false, 
+                    `Confidence: ${(response.confidence * 100).toFixed(1)}% • ${responseTime.toFixed(0)}ms • ID: ${conversationId}`
+                );
+                
+                // Update analytics
+                updateSystemStatus();
+                updateAnalytics();
+                
+            }, 1000 + Math.random() * 2000);
+        };
+
+        window.handleChatEnter = function(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        };
+
+        window.clearChat = function() {
+            const container = document.getElementById('chatContainer');
+            container.innerHTML = `
+                <div class="message ai-message">
+                    <div>👋 Chat cleared! I still remember our previous conversations in my memory.</div>
+                    <div class="message-meta">AI Assistant • Memory Active • 0ms</div>
+                </div>
+            `;
+            chatHistory = [];
+        };
+
+        function addChatMessage(message, sender, isTyping = false, meta = '') {
+            const container = document.getElementById('chatContainer');
+            const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.id = messageId;
+            
+            const metaText = meta || `${sender === 'user' ? 'You' : 'AI Assistant'} • ${new Date().toLocaleTimeString()}`;
+            
+            messageDiv.innerHTML = `
+                <div>${isTyping ? '<div class="loading">💭</div> ' : ''}${message}</div>
+                <div class="message-meta">${metaText}</div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+            
+            chatHistory.push({ message, sender, timestamp: Date.now() });
+            
+            return messageId;
+        }
+
+        async function updateAnalytics() {
+            try {
+                const insights = await historyManager.getMemoryInsights();
+                
+                document.getElementById('totalConversations').textContent = insights.totalConversations;
+                document.getElementById('averageConfidence').textContent = `${(insights.averageConfidence * 100).toFixed(1)}%`;
+                document.getElementById('sessionConversations').textContent = historyManager.stats.sessionConversations;
+                document.getElementById('responseTime').textContent = `${insights.performanceMetrics.averageResponseTime.toFixed(0)}ms`;
+                
+            } catch (error) {
+                console.error('Error updating analytics:', error);
+            }
+        }
+
+        // Initialize system
+        updateSystemStatus();
+        updateAnalytics();
+
+        // Auto-refresh status every 30 seconds
+        setInterval(() => {
+            updateSystemStatus();
+        }, 30000);
+
+        console.log('✅ History Manager Test Suite loaded and ready!');
+    </script>
+</body>
+</html>

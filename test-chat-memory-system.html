@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Memory System Test</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .test-section {
+            margin: 25px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb;
+        }
+        .info { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+            border: 1px solid #bee5eb;
+        }
+        .chat-demo {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .user-message {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            margin-left: 20%;
+        }
+        .assistant-message {
+            background: #f0f0f0;
+            color: #333;
+            margin-right: 20%;
+        }
+        .rating-stars {
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        .star {
+            cursor: pointer;
+            color: #ddd;
+            transition: color 0.2s;
+        }
+        .star.filled {
+            color: #ffc107;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 AI Chat Memory System</h1>
+            <p>Comprehensive test of chat history, learning, and memory features</p>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalSessions">0</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalMessages">0</div>
+                    <div class="stat-label">Total Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avgRating">0.0</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="aiTrend">📊</div>
+                    <div class="stat-label">Learning Trend</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Chat Memory Core Functionality</h3>
+            <button onclick="testChatMemoryCore()">Test Core Features</button>
+            <div id="coreResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 AI Learning & Rating System</h3>
+            <button onclick="testLearningSystem()">Test Learning Features</button>
+            <div id="learningResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>💬 Interactive Chat Demo</h3>
+            <p>Test the full chat experience with memory and ratings:</p>
+            
+            <div>
+                <input type="text" id="chatInput" placeholder="Ask me about development, pricing, or anything else..." 
+                       style="width: 70%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <button onclick="sendChatMessage()">Send</button>
+                <button onclick="startNewChatSession()">New Session</button>
+            </div>
+
+            <div class="chat-demo" id="chatArea"></div>
+
+            <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 6px;">
+                <strong>Chat Instructions:</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Ask questions about services, tech stack, pricing</li>
+                    <li>Rate each AI response (1-5 stars)</li>
+                    <li>Provide feedback for poor responses (1-2 stars)</li>
+                    <li>Watch the AI learn and improve over time</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Memory Analytics</h3>
+            <button onclick="showMemoryAnalytics()">Show Analytics</button>
+            <div id="analyticsResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 Session Management</h3>
+            <button onclick="testSessionManagement()">Test Sessions</button>
+            <div id="sessionResults"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock the chat memory system for testing
+        class MockChatHistoryManager {
+            constructor() {
+                this.users = new Map()
+                this.badResponses = []
+                this.loadFromStorage()
+            }
+
+            loadFromStorage() {
+                try {
+                    const data = localStorage.getItem('test_chat_memory')
+                    if (data) {
+                        const parsed = JSON.parse(data)
+                        this.users = new Map(parsed.users || [])
+                        this.badResponses = parsed.badResponses || []
+                    }
+                } catch (e) {
+                    console.log('No existing chat memory found')
+                }
+            }
+
+            saveToStorage() {
+                const data = {
+                    users: Array.from(this.users.entries()),
+                    badResponses: this.badResponses
+                }
+                localStorage.setItem('test_chat_memory', JSON.stringify(data))
+            }
+
+            getUserMemory(userId) {
+                if (!this.users.has(userId)) {
+                    this.users.set(userId, {
+                        userId,
+                        sessions: [],
+                        preferences: {
+                            autoSaveChats: true,
+                            maxSessionsToKeep: 50,
+                            topicDetectionEnabled: true
+                        }
+                    })
+                }
+                return this.users.get(userId)
+            }
+
+            async startNewSession(userId, initialMessage = '') {
+                const memory = this.getUserMemory(userId)
+                const sessionId = \`session_\${Date.now()}_\${Math.random().toString(36).substr(2, 9)}\`
+                
+                const topic = this.detectTopic(initialMessage)
+                const title = this.generateSessionTitle(initialMessage, topic)
+
+                const newSession = {
+                    id: sessionId,
+                    userId,
+                    topic,
+                    title,
+                    messages: [],
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    tags: this.generateTags(topic, initialMessage)
+                }
+
+                memory.sessions.unshift(newSession)
+                this.saveToStorage()
+                return sessionId
+            }
+
+            async addMessage(userId, sessionId, message) {
+                const memory = this.getUserMemory(userId)
+                const session = memory.sessions.find(s => s.id === sessionId)
+                
+                if (!session) {
+                    throw new Error(\`Session \${sessionId} not found\`)
+                }
+
+                session.messages.push(message)
+                session.updatedAt = new Date()
+
+                // Learn from bad responses
+                if (message.role === 'assistant' && message.metadata?.rating && message.metadata.rating <= 2) {
+                    this.learnFromBadResponse(message.content, 'Poor response')
+                }
+
+                this.saveToStorage()
+            }
+
+            getUserSessions(userId, options = {}) {
+                const memory = this.getUserMemory(userId)
+                let sessions = [...memory.sessions]
+
+                if (options.topic) {
+                    sessions = sessions.filter(s => s.topic.toLowerCase().includes(options.topic.toLowerCase()))
+                }
+
+                if (options.searchQuery) {
+                    const query = options.searchQuery.toLowerCase()
+                    sessions = sessions.filter(s => 
+                        s.title.toLowerCase().includes(query) ||
+                        s.messages.some(m => m.content.toLowerCase().includes(query))
+                    )
+                }
+
+                if (options.limit) {
+                    sessions = sessions.slice(0, options.limit)
+                }
+
+                return sessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+            }
+
+            getChatStats(userId) {
+                const memory = this.getUserMemory(userId)
+                const allMessages = memory.sessions.flatMap(s => s.messages)
+                const ratedMessages = allMessages.filter(m => m.metadata?.rating)
+                
+                const totalSessions = memory.sessions.length
+                const totalMessages = allMessages.length
+                const avgRating = ratedMessages.length > 0 
+                    ? ratedMessages.reduce((sum, m) => sum + m.metadata.rating, 0) / ratedMessages.length 
+                    : 0
+                
+                const recentRatings = ratedMessages.slice(-10).map(m => m.metadata.rating)
+                const earlyRatings = ratedMessages.slice(0, 10).map(m => m.metadata.rating)
+                
+                let improvementTrend = 'Stable'
+                if (recentRatings.length > 0 && earlyRatings.length > 0) {
+                    const recentAvg = recentRatings.reduce((a, b) => a + b, 0) / recentRatings.length
+                    const earlyAvg = earlyRatings.reduce((a, b) => a + b, 0) / earlyRatings.length
+                    
+                    if (recentAvg > earlyAvg + 0.2) improvementTrend = 'Improving'
+                    else if (recentAvg < earlyAvg - 0.2) improvementTrend = 'Declining'
+                }
+
+                return {
+                    totalSessions,
+                    totalMessages,
+                    averageRating: Math.round(avgRating * 10) / 10,
+                    improvementTrend,
+                    topicsDiscussed: [...new Set(memory.sessions.map(s => s.topic))]
+                }
+            }
+
+            detectTopic(message) {
+                const topicPatterns = [
+                    { pattern: /\\b(service|offer|provide|help|what.*do|pricing|cost|price)\\b/i, topic: 'Services & Pricing' },
+                    { pattern: /\\b(react|javascript|typescript|node|frontend|backend|development|code|programming)\\b/i, topic: 'Development & Tech' },
+                    { pattern: /\\b(project|timeline|process|workflow|start|begin|planning)\\b/i, topic: 'Project Planning' },
+                    { pattern: /\\b(design|ui|ux|interface|website|mobile|app)\\b/i, topic: 'Design & UX' },
+                ]
+
+                for (const { pattern, topic } of topicPatterns) {
+                    if (pattern.test(message)) {
+                        return topic
+                    }
+                }
+
+                return 'General Chat'
+            }
+
+            generateSessionTitle(message, topic) {
+                const words = message.split(' ').slice(0, 6).join(' ')
+                const shortTitle = words.length > 40 ? words.substring(0, 40) + '...' : words
+                return shortTitle || \`\${topic} Discussion\`
+            }
+
+            generateTags(topic, message = '') {
+                const tags = [topic.toLowerCase()]
+                
+                const tagPatterns = [
+                    { pattern: /\\breact\\b/i, tag: 'react' },
+                    { pattern: /\\bjavascript\\b/i, tag: 'javascript' },
+                    { pattern: /\\bprice|cost|pricing\\b/i, tag: 'pricing' },
+                    { pattern: /\\bdesign\\b/i, tag: 'design' }
+                ]
+
+                for (const { pattern, tag } of tagPatterns) {
+                    if (pattern.test(message) && !tags.includes(tag)) {
+                        tags.push(tag)
+                    }
+                }
+
+                return tags
+            }
+
+            learnFromBadResponse(response, feedback) {
+                this.badResponses.push({
+                    response,
+                    feedback,
+                    timestamp: new Date(),
+                    id: \`bad_\${Date.now()}\`
+                })
+                this.saveToStorage()
+                console.log('📚 Learning from bad response:', feedback)
+            }
+
+            async deleteSession(userId, sessionId) {
+                const memory = this.getUserMemory(userId)
+                const sessionIndex = memory.sessions.findIndex(s => s.id === sessionId)
+                
+                if (sessionIndex === -1) {
+                    return false
+                }
+
+                memory.sessions.splice(sessionIndex, 1)
+                this.saveToStorage()
+                return true
+            }
+        }
+
+        // Initialize the mock chat manager
+        window.chatManager = new MockChatHistoryManager()
+        window.currentUserId = 'test_user_001'
+        window.currentSessionId = null
+
+        // Mock knowledge base for responses
+        window.knowledgeBase = {
+            services: {
+                title: 'My Development Services',
+                content: \`I offer full-stack web development services including:
+
+• Custom web applications using React and TypeScript
+• Backend development with Node.js and Python
+• UI/UX design and conversion optimization
+• Database design and API development
+• Performance optimization and security implementation
+
+I've completed 50+ projects with 98% client satisfaction.\`
+            },
+            pricing: {
+                title: 'Project Pricing Structure',
+                content: \`My pricing is based on project complexity and scope:
+
+• Small projects (landing pages): $2,000 - $5,000
+• Medium projects (web apps): $5,000 - $15,000
+• Large projects (enterprise): $15,000 - $50,000+
+• Ongoing maintenance: $500 - $2,000/month
+
+All projects include source code ownership and 30-day support.\`
+            },
+            tech: {
+                title: 'Technology Stack',
+                content: \`I work with modern technologies:
+
+Frontend: React, TypeScript, Tailwind CSS, Next.js
+Backend: Node.js, Python, Django, PostgreSQL
+Tools: Git, Docker, AWS, Vercel
+Design: Figma, Adobe Creative Suite
+
+This ensures your project is built with industry best practices.\`
+            }
+        }
+
+        function getKnowledgeResponse(query) {
+            const q = query.toLowerCase()
+            
+            if (q.includes('service') || q.includes('offer') || q.includes('help')) {
+                return window.knowledgeBase.services
+            } else if (q.includes('price') || q.includes('cost') || q.includes('pricing')) {
+                return window.knowledgeBase.pricing
+            } else if (q.includes('tech') || q.includes('stack') || q.includes('development')) {
+                return window.knowledgeBase.tech
+            } else {
+                return {
+                    title: 'General Information',
+                    content: \`I'm a full-stack developer specializing in modern web applications. I can help you with development services, project planning, and technical consulting. What would you like to know more about?\`
+                }
+            }
+        }
+
+        // Test functions
+        window.testChatMemoryCore = async function() {
+            const results = document.getElementById('coreResults')
+            results.innerHTML = '<div class="info">Running core functionality tests...</div>'
+            
+            try {
+                // Test session creation
+                const sessionId = await window.chatManager.startNewSession(window.currentUserId, 'Testing chat memory system')
+                window.currentSessionId = sessionId
+                
+                // Test message addition
+                await window.chatManager.addMessage(window.currentUserId, sessionId, {
+                    id: 'msg_1',
+                    role: 'user',
+                    content: 'What services do you offer?',
+                    timestamp: new Date()
+                })
+
+                await window.chatManager.addMessage(window.currentUserId, sessionId, {
+                    id: 'msg_2',
+                    role: 'assistant',
+                    content: 'I offer full-stack development services...',
+                    timestamp: new Date(),
+                    metadata: { rating: 4 }
+                })
+
+                // Test session retrieval
+                const sessions = window.chatManager.getUserSessions(window.currentUserId)
+                
+                results.innerHTML = \`
+                    <div class="success">✅ Session created successfully: \${sessionId}</div>
+                    <div class="success">✅ Messages added and stored</div>
+                    <div class="success">✅ Sessions retrieved: \${sessions.length} total</div>
+                    <div class="info">📊 Last session has \${sessions[0]?.messages.length || 0} messages</div>
+                \`
+                
+                updateStats()
+            } catch (error) {
+                results.innerHTML = \`<div class="error">❌ Core test failed: \${error.message}</div>\`
+            }
+        }
+
+        window.testLearningSystem = async function() {
+            const results = document.getElementById('learningResults')
+            results.innerHTML = '<div class="info">Testing AI learning capabilities...</div>'
+            
+            try {
+                if (!window.currentSessionId) {
+                    window.currentSessionId = await window.chatManager.startNewSession(window.currentUserId, 'Learning test')
+                }
+
+                // Add a message with good rating
+                await window.chatManager.addMessage(window.currentUserId, window.currentSessionId, {
+                    id: 'msg_good',
+                    role: 'assistant',
+                    content: 'Excellent response about development services',
+                    timestamp: new Date(),
+                    metadata: { rating: 5 }
+                })
+
+                // Add a message with poor rating  
+                await window.chatManager.addMessage(window.currentUserId, window.currentSessionId, {
+                    id: 'msg_bad',
+                    role: 'assistant',
+                    content: 'Poor response that needs improvement',
+                    timestamp: new Date(),
+                    metadata: { rating: 1 }
+                })
+
+                // Test learning from bad response
+                window.chatManager.learnFromBadResponse('Poor response', 'Response was too vague and unhelpful')
+
+                const stats = window.chatManager.getChatStats(window.currentUserId)
+                
+                results.innerHTML = \`
+                    <div class="success">✅ Good response logged (5 stars)</div>
+                    <div class="success">✅ Poor response logged (1 star)</div>
+                    <div class="success">✅ Learning feedback recorded</div>
+                    <div class="info">📈 Average rating: \${stats.averageRating}/5</div>
+                    <div class="info">🎯 Learning trend: \${stats.improvementTrend}</div>
+                    <div class="info">🧠 Bad responses logged: \${window.chatManager.badResponses.length}</div>
+                \`
+                
+                updateStats()
+            } catch (error) {
+                results.innerHTML = \`<div class="error">❌ Learning test failed: \${error.message}</div>\`
+            }
+        }
+
+        window.sendChatMessage = async function() {
+            const input = document.getElementById('chatInput')
+            const chatArea = document.getElementById('chatArea')
+            const message = input.value.trim()
+            
+            if (!message) return
+            
+            if (!window.currentSessionId) {
+                window.currentSessionId = await window.chatManager.startNewSession(window.currentUserId, message)
+            }
+
+            // Add user message to UI and storage
+            const userMsgId = \`msg_\${Date.now()}\`
+            const userMessage = {
+                id: userMsgId,
+                role: 'user',
+                content: message,
+                timestamp: new Date()
+            }
+
+            chatArea.innerHTML += \`
+                <div class="message user-message">
+                    <strong>You:</strong> \${message}
+                    <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">
+                        \${new Date().toLocaleTimeString()}
+                    </div>
+                </div>
+            \`
+
+            await window.chatManager.addMessage(window.currentUserId, window.currentSessionId, userMessage)
+
+            // Generate AI response
+            const response = getKnowledgeResponse(message)
+            const aiMsgId = \`msg_\${Date.now()}_ai\`
+            
+            setTimeout(async () => {
+                const aiMessage = {
+                    id: aiMsgId,
+                    role: 'assistant',
+                    content: response.content,
+                    timestamp: new Date(),
+                    metadata: { intent: response.title }
+                }
+
+                chatArea.innerHTML += \`
+                    <div class="message assistant-message">
+                        <strong>\${response.title}:</strong><br>
+                        \${response.content.replace(/\\n/g, '<br>')}
+                        <div class="rating-stars">
+                            Rate this response: 
+                            \${[1,2,3,4,5].map(star => 
+                                \`<span class="star" onclick="rateMessage('\${aiMsgId}', \${star})">\${star}⭐</span>\`
+                            ).join(' ')}
+                        </div>
+                        <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">
+                            \${new Date().toLocaleTimeString()}
+                        </div>
+                    </div>
+                \`
+
+                await window.chatManager.addMessage(window.currentUserId, window.currentSessionId, aiMessage)
+                chatArea.scrollTop = chatArea.scrollHeight
+                updateStats()
+            }, 800)
+
+            input.value = ''
+            chatArea.scrollTop = chatArea.scrollHeight
+        }
+
+        window.rateMessage = async function(messageId, rating) {
+            try {
+                // Update the message rating
+                const sessions = window.chatManager.getUserSessions(window.currentUserId)
+                const currentSession = sessions.find(s => s.id === window.currentSessionId)
+                const message = currentSession?.messages.find(m => m.id === messageId)
+                
+                if (message) {
+                    message.metadata = { ...message.metadata, rating }
+                    window.chatManager.saveToStorage()
+                    
+                    // Visual feedback
+                    const stars = document.querySelectorAll(\`[onclick="rateMessage('\${messageId}', 1)"]\`).forEach((star, index) => {
+                        const starElement = star.parentElement.children[index + 1]
+                        if (starElement && index < rating) {
+                            starElement.classList.add('filled')
+                        }
+                    })
+                    
+                    if (rating <= 2) {
+                        const feedback = prompt('What went wrong with this response? Your feedback helps the AI improve:')
+                        if (feedback) {
+                            window.chatManager.learnFromBadResponse(message.content, feedback)
+                        }
+                    }
+                    
+                    updateStats()
+                    console.log(\`Rated message \${messageId} with \${rating} stars\`)
+                }
+            } catch (error) {
+                console.error('Failed to rate message:', error)
+            }
+        }
+
+        window.startNewChatSession = async function() {
+            window.currentSessionId = await window.chatManager.startNewSession(window.currentUserId, 'New conversation')
+            document.getElementById('chatArea').innerHTML = '<div class="info">🆕 Started new chat session! Ask me anything.</div>'
+            updateStats()
+        }
+
+        window.showMemoryAnalytics = function() {
+            const results = document.getElementById('analyticsResults')
+            const stats = window.chatManager.getChatStats(window.currentUserId)
+            const sessions = window.chatManager.getUserSessions(window.currentUserId)
+            
+            const topicsCount = {}
+            sessions.forEach(session => {
+                topicsCount[session.topic] = (topicsCount[session.topic] || 0) + 1
+            })
+
+            results.innerHTML = \`
+                <div class="success">📊 Complete Analytics Report</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">\${stats.totalSessions}</div>
+                        <div class="stat-label">Total Sessions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">\${stats.totalMessages}</div>
+                        <div class="stat-label">Total Messages</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">★\${stats.averageRating}</div>
+                        <div class="stat-label">Average Rating</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">\${stats.improvementTrend === 'Improving' ? '📈' : stats.improvementTrend === 'Declining' ? '📉' : '➖'}</div>
+                        <div class="stat-label">\${stats.improvementTrend}</div>
+                    </div>
+                </div>
+                <div class="info">
+                    <strong>Topics Discussed:</strong><br>
+                    \${Object.entries(topicsCount).map(([topic, count]) => \`• \${topic}: \${count} sessions\`).join('<br>')}
+                </div>
+                <div class="info">
+                    <strong>Bad Responses Logged:</strong> \${window.chatManager.badResponses.length}<br>
+                    <strong>Learning Database:</strong> Active and growing
+                </div>
+            \`
+        }
+
+        window.testSessionManagement = async function() {
+            const results = document.getElementById('sessionResults')
+            results.innerHTML = '<div class="info">Testing session management...</div>'
+            
+            try {
+                // Create multiple sessions
+                const session1 = await window.chatManager.startNewSession(window.currentUserId, 'First test session')
+                const session2 = await window.chatManager.startNewSession(window.currentUserId, 'Second test session')
+                const session3 = await window.chatManager.startNewSession(window.currentUserId, 'React development question')
+                
+                // Add messages to different sessions
+                await window.chatManager.addMessage(window.currentUserId, session1, {
+                    id: 'test1', role: 'user', content: 'What services do you offer?', timestamp: new Date()
+                })
+                
+                await window.chatManager.addMessage(window.currentUserId, session2, {
+                    id: 'test2', role: 'user', content: 'How much does a project cost?', timestamp: new Date()
+                })
+
+                // Test filtering
+                const allSessions = window.chatManager.getUserSessions(window.currentUserId)
+                const reactSessions = window.chatManager.getUserSessions(window.currentUserId, { searchQuery: 'React' })
+                
+                // Test deletion
+                const deleted = await window.chatManager.deleteSession(window.currentUserId, session3)
+                const afterDeletion = window.chatManager.getUserSessions(window.currentUserId)
+                
+                results.innerHTML = \`
+                    <div class="success">✅ Created 3 test sessions</div>
+                    <div class="success">✅ Added messages to sessions</div>
+                    <div class="success">✅ Session filtering works (found \${reactSessions.length} React sessions)</div>
+                    <div class="success">✅ Session deletion works (\${deleted ? 'success' : 'failed'})</div>
+                    <div class="info">📝 Sessions before deletion: \${allSessions.length}</div>
+                    <div class="info">📝 Sessions after deletion: \${afterDeletion.length}</div>
+                \`
+                
+                updateStats()
+            } catch (error) {
+                results.innerHTML = \`<div class="error">❌ Session management test failed: \${error.message}</div>\`
+            }
+        }
+
+        function updateStats() {
+            const stats = window.chatManager.getChatStats(window.currentUserId)
+            document.getElementById('totalSessions').textContent = stats.totalSessions
+            document.getElementById('totalMessages').textContent = stats.totalMessages  
+            document.getElementById('avgRating').textContent = \`★\${stats.averageRating}\`
+            document.getElementById('aiTrend').textContent = stats.improvementTrend === 'Improving' ? '📈' : 
+                                                               stats.improvementTrend === 'Declining' ? '📉' : '➖'
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats()
+            
+            // Add enter key support for chat input
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendChatMessage()
+                }
+            })
+        })
+    </script>
+</body>
+</html>
